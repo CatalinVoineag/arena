@@ -1,16 +1,7 @@
-#include <SDL3/SDL_audio.h>
-#include <SDL3/SDL_events.h>
-#include <SDL3/SDL_gamepad.h>
-#include <SDL3/SDL_init.h>
-#include <SDL3/SDL_init.h>
-#include <SDL3/SDL_log.h>
-#include <SDL3/SDL_rect.h>
-#include <SDL3/SDL_render.h>
-#include <SDL3/SDL_surface.h>
-#include <SDL3/SDL_video.h>
-#include <SDL3/SDL_timer.h>
-#include <SDL3/SDL.h>
-#include <SDL3/SDL_main.h>
+#include "core/player.h"
+#include "core/input.h"
+#include "core/enemy.h"
+#include "globals.h"
 #include <bits/stdc++.h>
 #include <algorithm>
 #include <cstdio>
@@ -40,25 +31,8 @@ typedef struct gameState {
   bool gameOver;
 } gameState;
 
-typedef enum playerState {
-  IDLE,
-  MOVING
-} playerState;
-
-typedef struct playerStruct {
-  SDL_FRect rect;
-  SDL_FRect subRect;
-  int animationCounter;
-  playerState state;
-  int speed;
-} playerStruct;
-
-typedef struct keyboardStruct {
-  map<int, bool> keycodes;
-} keyboardStruct;
-
-global SDL_Window *window = NULL;
-global SDL_Renderer *renderer = NULL;
+SDL_Window *window;
+SDL_Renderer *renderer;
 global int letters_size = 16;
 global vector<button_struct> button_structs;
 global gameState state {
@@ -71,37 +45,10 @@ global gameState state {
   .score = 0,
   .gameOver = false,
 };
-global playerStruct player {
-  .rect = { .x = 200, .y = 300, .w = 192, .h = 192 },
-  .subRect = {},
-  .animationCounter = 0,
-  .state = IDLE,
-  .speed = 5
-}; 
-global keyboardStruct keyboard {
-  .keycodes = {}
-};
-global Uint32 lastFrameTime = 0;
-global Uint32 frameDuration = 80;
+Player::data player;
+inputStruct *input = new inputStruct { .keycodes = {}, .mousecodes = {} };
 global vector<SDL_Surface*> surfaces;
-global SDL_Texture *idleTexture;
-global SDL_Texture *moveTexture;
-
-void idle() {
-  Uint32 now = SDL_GetTicks();
-
-  if (now - lastFrameTime >= frameDuration) {
-    lastFrameTime = now;
-    player.animationCounter = (player.animationCounter + 1) % 8;
-  }
-
-  player.subRect.x = 192 * player.animationCounter;
-  player.subRect.y = 0;
-  player.subRect.w = 192;
-  player.subRect.h = 500;
-
-  SDL_RenderTexture(renderer, idleTexture, &player.subRect, &player.rect);
-}
+Uint32 frameDuration;
 
 SDL_Texture *loadTexture(string path) {
   SDL_Surface *surface;
@@ -120,48 +67,13 @@ SDL_Texture *loadTexture(string path) {
   return texture;
 }
 
-bool pressed(int keycode) {
-  return keyboard.keycodes[keycode] == true;
-}
-
-void move() {
-  Uint32 now = SDL_GetTicks();
-  if (pressed(SDLK_A)) {
-    player.rect.x -= player.speed;
-  }
-  if (pressed(SDLK_D)) {
-    player.rect.x += player.speed;
-  }
-  if (pressed(SDLK_W)) {
-    player.rect.y -= player.speed;
-  }
-  if (pressed(SDLK_S)) {
-    player.rect.y += player.speed;
-  }
-
-  if (now - lastFrameTime >= frameDuration) {
-    lastFrameTime = now;
-    player.animationCounter = (player.animationCounter + 1) % 6;
-  }
-
-  player.subRect.x = 192 * player.animationCounter;
-  player.subRect.y = 0;
-  player.subRect.w = 192;
-  player.subRect.h = 500;
-
-  SDL_RenderTexture(renderer, moveTexture, &player.subRect, &player.rect);
-}
-
-bool moving() {
-  return keyboard.keycodes[SDLK_A] ||
-    keyboard.keycodes[SDLK_D] ||
-    keyboard.keycodes[SDLK_W] ||
-    keyboard.keycodes[SDLK_S];
-};
+SDL_Texture *idleTexture;
+SDL_Texture *moveTexture;
+SDL_Texture *attackTexture;
+SDL_Texture *defendTexture;
+SDL_Texture *enemyIdleTexture;
 
 int main() {
-  SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
-
   SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
   if (!SDL_CreateWindowAndRenderer("Word", 1920, 1080, SDL_WINDOW_EXTERNAL, &window, &renderer)) {
     SDL_Log("Cannot create window %s\n", SDL_GetError());
@@ -169,10 +81,14 @@ int main() {
 
   SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
   SDL_RenderClear(renderer);
-  SDL_Keycode keycode;
 
+  player = Player::init();
+  frameDuration = 80;
   idleTexture = loadTexture("Units/Warrior/Warrior_Idle.png");
   moveTexture = loadTexture("Units/Warrior/Warrior_Run.png");
+  attackTexture = loadTexture("Units/Warrior/Warrior_Attack1.png");
+  defendTexture = loadTexture("Units/Warrior/Warrior_Guard.png");
+  enemyIdleTexture = loadTexture("Units/Red/Warrior/Warrior_Idle.png");
 
   while (state.running) {
     SDL_Event event;
@@ -187,48 +103,31 @@ int main() {
           state.running = false;
           break;
         case SDL_EVENT_MOUSE_BUTTON_DOWN: {
-          SDL_FPoint point = { event.button.x, event.button.y };
+          input->mousecodes[event.button.button] = event.button.down;
+          break;
+        }
+        case SDL_EVENT_MOUSE_BUTTON_UP: {
+          input->mousecodes[event.button.button] = event.button.down;
           break;
         }
         case SDL_EVENT_KEY_DOWN: {
-          keyboard.keycodes[event.key.key] = event.key.down;
-          switch(event.key.key) {
-            case SDLK_A: {
-              player.state = MOVING;
-              break;
-            }
-            case SDLK_D: {
-              player.state = MOVING;
-              break;
-            }
-            case SDLK_S: {
-              player.state = MOVING;
-              break;
-            }
-            case SDLK_W: {
-              player.state = MOVING;
-              break;
-            }
-          }
+          input->keycodes[event.key.key] = event.key.down;
           break;
         }
         case SDL_EVENT_KEY_UP:
-          keyboard.keycodes[event.key.key] = event.key.down;
+          input->keycodes[event.key.key] = event.key.down;
           break;
       }
     }
 
-    for (auto keycode : keyboard.keycodes) {
-      if (keycode.second == 1) {
-        printf("keycode pressed %i %b \n", keycode.first, keycode.second);
-      }
-    }
-
-    if (moving()) {
-      move();
-    } else {
-      idle();
-    }
+    // SDL_FPoint point = { player.rect.x, player.rect.y };
+    // if (SDL_PointInRectFloat(&point, &enemy.rect)) {
+    //   printf("HIT\n");
+    // } else {
+    //   printf("NOT HIT\n");
+    // }
+    Player::update();
+    Enemy::idle();
 
     SDL_RenderPresent(renderer);
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
@@ -240,6 +139,7 @@ int main() {
   for (int i = 0; i < surfaces.size(); i++){
     SDL_DestroySurface(surfaces[i]);
   }
+  delete input;
   SDL_DestroyWindow(window);
   SDL_Quit();
 
