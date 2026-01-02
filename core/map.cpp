@@ -68,6 +68,14 @@ namespace Map {
         SDL_RenderTexture(renderer, tileMapTexture, &subRect, &rect);
       }
     }
+
+    SDL_FRect rect;
+    rect.x = 800;
+    rect.y = 100;
+    rect.w = 192;
+    rect.h = 320;
+
+    SDL_RenderTexture(renderer, monastaryTexture, NULL, &rect);
   }
 }
 

@@ -76,6 +76,7 @@ SDL_Texture *attackTexture;
 SDL_Texture *defendTexture;
 SDL_Texture *enemyIdleTexture;
 SDL_Texture *tileMapTexture;
+SDL_Texture *monastaryTexture;
 
 int main() {
   SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
@@ -94,6 +95,7 @@ int main() {
   defendTexture = loadTexture("Units/Warrior/Warrior_Guard.png");
   enemyIdleTexture = loadTexture("Units/Red/Warrior/Warrior_Idle.png");
   tileMapTexture = loadTexture("Terrain/Tileset/Tilemap_color2.png");
+  monastaryTexture = loadTexture("Buildings/Blue Buildings/Monastery.png");
 
   while (state.running) {
     SDL_Event event;
