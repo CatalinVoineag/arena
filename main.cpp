@@ -1,7 +1,9 @@
 #include "core/player.h"
 #include "core/input.h"
 #include "core/enemy.h"
+#include "core/map.h"
 #include "globals.h"
+#include <SDL3/SDL_render.h>
 #include <bits/stdc++.h>
 #include <algorithm>
 #include <cstdio>
@@ -10,6 +12,7 @@
 #include <iterator>
 #include <string.h>
 #include <vector>
+#include <map>
 using namespace std;
 
 #define global static
@@ -72,6 +75,7 @@ SDL_Texture *moveTexture;
 SDL_Texture *attackTexture;
 SDL_Texture *defendTexture;
 SDL_Texture *enemyIdleTexture;
+SDL_Texture *tileMapTexture;
 
 int main() {
   SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
@@ -89,6 +93,7 @@ int main() {
   attackTexture = loadTexture("Units/Warrior/Warrior_Attack1.png");
   defendTexture = loadTexture("Units/Warrior/Warrior_Guard.png");
   enemyIdleTexture = loadTexture("Units/Red/Warrior/Warrior_Idle.png");
+  tileMapTexture = loadTexture("Terrain/Tileset/Tilemap_color2.png");
 
   while (state.running) {
     SDL_Event event;
@@ -126,6 +131,8 @@ int main() {
     // } else {
     //   printf("NOT HIT\n");
     // }
+
+    Map::update();
     Player::update();
     Enemy::idle();
 
