@@ -3,6 +3,8 @@
 #include "core/enemy.h"
 #include "core/map.h"
 #include "globals.h"
+#include <SDL3/SDL_oldnames.h>
+#include <SDL3/SDL_rect.h>
 #include <SDL3/SDL_render.h>
 #include <bits/stdc++.h>
 #include <algorithm>
@@ -48,7 +50,6 @@ global gameState state {
   .score = 0,
   .gameOver = false,
 };
-Player::data player;
 inputStruct *input = new inputStruct { .keycodes = {}, .mousecodes = {} };
 global vector<SDL_Surface*> surfaces;
 Uint32 frameDuration;
@@ -87,7 +88,6 @@ int main() {
   SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
   SDL_RenderClear(renderer);
 
-  player = Player::init();
   frameDuration = 80;
   idleTexture = loadTexture("Units/Warrior/Warrior_Idle.png");
   moveTexture = loadTexture("Units/Warrior/Warrior_Run.png");
@@ -96,6 +96,8 @@ int main() {
   enemyIdleTexture = loadTexture("Units/Red/Warrior/Warrior_Idle.png");
   tileMapTexture = loadTexture("Terrain/Tileset/Tilemap_color2.png");
   monastaryTexture = loadTexture("Buildings/Blue Buildings/Monastery.png");
+  Player::data& player = Player::init();
+  Enemy::data& enemy = Enemy::init();
 
   while (state.running) {
     SDL_Event event;
@@ -127,16 +129,18 @@ int main() {
       }
     }
 
-    // SDL_FPoint point = { player.rect.x, player.rect.y };
-    // if (SDL_PointInRectFloat(&point, &enemy.rect)) {
-    //   printf("HIT\n");
-    // } else {
-    //   printf("NOT HIT\n");
-    // }
-
     Map::update();
     Player::update();
     Enemy::idle();
+
+    // clear mouse or keycodes
+    input->mousecodes[SDL_BUTTON_LEFT] = false;
+
+    SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+    SDL_RenderRect(renderer, &player.rect);
+    SDL_RenderRect(renderer, &player.hitbox);
+    SDL_RenderRect(renderer, &enemy.rect);
+    SDL_RenderRect(renderer, &enemy.hitbox);
 
     SDL_RenderPresent(renderer);
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);

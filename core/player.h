@@ -18,6 +18,7 @@ namespace Player {
   typedef struct data {
     SDL_FRect rect;
     SDL_FRect subRect;
+    SDL_FRect hitbox;
     int idleAnimationCounter;
     int idleSprites;
     int attackAnimationCounter;
@@ -28,9 +29,10 @@ namespace Player {
     int moveSprites;
     int speed;
     SDL_FlipMode sdl_flip;
+    bool midAnimation;
   } playerStruct;
 
-  data init();
+  data &init();
   void idle();
   void move();
   void attack();
