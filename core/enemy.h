@@ -13,26 +13,42 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 
-extern Uint32 enemyLastFrameTime;
+typedef enum enemyState {
+  NORMAL,
+  HIT,
+} enemyState;
 
-namespace Enemy {
-  typedef struct data {
-    SDL_FRect rect;
-    SDL_FRect subRect;
-    SDL_FRect hitbox;
-    int idleAnimationCounter;
-    int idleSprites;
-    int attackAnimationCounter;
-    int attackSprites;
-    int defendAnimationCounter;
-    int defendSprites;
-    int moveAnimationCounter;
-    int moveSprites;
-    int speed;
-    SDL_FlipMode sdl_flip;
-  } enemyStruct;
+class Enemy {
+  public:
+  SDL_FRect rect;
+  SDL_FRect subRect;
+  SDL_FRect hitbox;
+  int idleAnimationCounter;
+  int idleSprites;
+  int attackAnimationCounter;
+  int attackSprites;
+  int defendAnimationCounter;
+  int defendSprites;
+  int moveAnimationCounter;
+  int moveSprites;
+  int speed;
+  SDL_FlipMode sdl_flip;
+  SDL_Texture* texture;
 
-  data& init();
-  void remove();
+  Enemy(SDL_Texture*, float, float);
+  void update();
+  void hit();
+
+  private:
+  enemyState state;
+  int hitboxOffsetW;
+  int hitboxOffsetH;
+  int hitDuration;
+  Uint32 enemyLastFrameTime;
+  Uint32 hitLastFrameTime;
+  Uint8 red;
+  Uint8 green;
+  Uint8 blue;
+
   void idle();
-}
+};

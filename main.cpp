@@ -96,8 +96,9 @@ int main() {
   enemyIdleTexture = loadTexture("Units/Red/Warrior/Warrior_Idle.png");
   tileMapTexture = loadTexture("Terrain/Tileset/Tilemap_color2.png");
   monastaryTexture = loadTexture("Buildings/Blue Buildings/Monastery.png");
-  Player::data& player = Player::init();
-  Enemy::data& enemy = Enemy::init();
+  Player player = Player();
+  Enemy enemy = Enemy(enemyIdleTexture, 300, 600);
+  Enemy second = Enemy(enemyIdleTexture, 700, 200);
 
   while (state.running) {
     SDL_Event event;
@@ -130,8 +131,12 @@ int main() {
     }
 
     Map::update();
-    Player::update();
-    Enemy::idle();
+    vector<Enemy*> enemies { &enemy, &second };
+    player.update(enemies);
+
+    for (int i = 0; i < enemies.size(); i++) {
+      enemies[i]->update();
+    }
 
     // clear mouse or keycodes
     input->mousecodes[SDL_BUTTON_LEFT] = false;

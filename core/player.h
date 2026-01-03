@@ -12,10 +12,12 @@
 #include <SDL3/SDL_timer.h>
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
+#include <vector>
 #include "../globals.h"
+#include "enemy.h"
 
-namespace Player {
-  typedef struct data {
+class Player {
+  public:
     SDL_FRect rect;
     SDL_FRect subRect;
     SDL_FRect hitbox;
@@ -30,12 +32,19 @@ namespace Player {
     int speed;
     SDL_FlipMode sdl_flip;
     bool midAnimation;
-  } playerStruct;
 
-  data &init();
-  void idle();
-  void move();
-  void attack();
-  void defend();
-  void update();
-}
+    Player();
+    void update(vector<Enemy*>);
+
+  private:
+    Uint32 lastFrameTime = 0;
+    int hitboxOffsetW = 55;
+    int hitboxOffsetH = 50;
+  
+    void idle();
+    void move();
+    void attack();
+    void hit(vector<Enemy*>);
+    bool attacking();
+    void defend();
+};
