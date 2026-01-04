@@ -21,9 +21,10 @@ typedef enum enemyState {
 
 class Enemy {
   public:
+  uintptr_t id;
   SDL_FRect rect;
   SDL_FRect subRect;
-  SDL_FRect hitbox;
+  SDL_FRect entityBox;
   enemyState state;
   int health;
   int damage;

@@ -6,13 +6,16 @@
 #include <cstdio>
 
 #define global static
-
 map<uintptr_t, SDL_FRect> obj_coordinates;
 
 Player::Player() {
   rect = { .x = 0, .y = 0, .w = 192, .h = 192 };
   subRect = {};
-  hitbox = { .w = 90, .h = 90 };
+  entityBox = {
+    .x = rect.x + hitboxOffsetW,
+    .y = rect.y + hitboxOffsetH,
+    .w = 90, .h = 90
+  };
   health = 20;
   damage = 2;
   idleAnimationCounter = 0;
@@ -26,9 +29,12 @@ Player::Player() {
   speed = 5;
   sdl_flip = SDL_FLIP_NONE;
   midAnimation = false;
-  Uint32 lastFrameTime = 0;
-  int hitboxOffsetW = 55;
-  int hitboxOffsetH = 50;
+  lastFrameTime = 0;
+  hitboxOffsetW = 55;
+  hitboxOffsetH = 50;
+  id = reinterpret_cast<uintptr_t>(this);
+
+  obj_coordinates[id] = { entityBox };
 }
 
   void Player::idle() {
@@ -43,69 +49,48 @@ Player::Player() {
     subRect.y = 0;
     subRect.w = 192;
     subRect.h = 192;
-    hitbox.x = rect.x + hitboxOffsetW;
-    hitbox.y = rect.y + hitboxOffsetH;
+    entityBox.x = rect.x + hitboxOffsetW;
+    entityBox.y = rect.y + hitboxOffsetH;
+    obj_coordinates[id] = { entityBox };
 
     SDL_RenderTextureRotated(renderer, idleTexture, &subRect, &rect, 0.0, NULL, sdl_flip);
   }
-
   bool pressed(int keycode) {
     return input->keycodes[keycode] == true;
   }
 
-  void Player::move(vector<Enemy> &enemies) {
+  void Player::move() {
     Uint32 now = SDL_GetTicks();
     bool rightColision = false;
     bool leftColision = false;
     bool upColision = false;
     bool downColision = false;
 
-    for (auto enemy : enemies) {
-      bool colision = SDL_HasRectIntersectionFloat(&rect, &enemy.rect); 
-
-      if (colision) {
-        int diffInCenterX = (rect.x + rect.w) / 2 - (enemy.rect.x + enemy.rect.w) / 2;
-        int diffInCenterY = (rect.y + rect.h) / 2 - (enemy.rect.y + enemy.rect.h) / 2;
-        int combinedHalfWidths = (rect.w + enemy.rect.w) / 2;
-        int combinedHalfHights = (rect.h + enemy.rect.h) / 2;
-
-        float overlapX = combinedHalfWidths - abs(diffInCenterX);
-        float overlapY = combinedHalfHights - abs(diffInCenterY);
-        if (overlapX < overlapY) {
-          if (diffInCenterX < 0) {
-            rightColision = true;
-          } else {
-            leftColision = true;
-          }
-        } else {
-          if (diffInCenterY < 0) {
-            downColision = true;
-          } else {
-            upColision = true;
-          }
-        }
-      }
-    }
-
     for (auto objRect : obj_coordinates) {
-      bool colision = SDL_HasRectIntersectionFloat(&rect, &objRect.second); 
-
+      if(objRect.first == id) { continue; }
+      bool colision = SDL_HasRectIntersectionFloat(&entityBox, &objRect.second); 
       if (colision) {
-        int diffInCenterX = (rect.x + rect.w) / 2  - (objRect.second.x + objRect.second.w) / 2;
-        int diffInCenterY = (rect.y + rect.h) / 2  - (objRect.second.y + objRect.second.h) / 2;
-        int combinedHalfWidths = (rect.w + objRect.second.w) / 2;
-        int combinedHalfHights = (rect.h + objRect.second.h) / 2;
+        float entityBoxLeft = entityBox.x;
+        float entityBoxRight = entityBox.x + entityBox.w;
+        float entityBoxTop = entityBox.y;
+        float entityBoxBottom = entityBox.y + entityBox.h;
 
-        float overlapX = combinedHalfWidths - abs(diffInCenterX);
-        float overlapY = combinedHalfHights - abs(diffInCenterY);
+        float objLeft = objRect.second.x;
+        float objRight = objRect.second.x + objRect.second.w;
+        float objTop = objRect.second.y;
+        float objBottom = objRect.second.y + objRect.second.h;
+
+        float overlapX = min(entityBoxRight, objRight) - max(entityBoxLeft, objLeft);
+        float overlapY = min(entityBoxBottom, objBottom) - max(entityBoxTop, objTop);
+
         if (overlapX < overlapY) {
-          if (diffInCenterX < 0) {
+          if (entityBox.x < objRect.second.x) {
             rightColision = true;
           } else {
             leftColision = true;
           }
         } else {
-          if (diffInCenterY < 0) {
+          if (entityBox.y < objRect.second.y) {
             downColision = true;
           } else {
             upColision = true;
@@ -134,8 +119,9 @@ Player::Player() {
     subRect.y = 0;
     subRect.w = 192;
     subRect.h = 192;
-    hitbox.x = rect.x + hitboxOffsetW;
-    hitbox.y = rect.y + hitboxOffsetH;
+    entityBox.x = rect.x + hitboxOffsetW;
+    entityBox.y = rect.y + hitboxOffsetH;
+    obj_coordinates[id] = { entityBox };
 
     SDL_RenderTextureRotated(renderer, moveTexture, &subRect, &rect, 0.0, NULL, sdl_flip);
   }
@@ -151,15 +137,16 @@ Player::Player() {
     subRect.y = 0;
     subRect.w = 192;
     subRect.h = 192;
-    hitbox.x = rect.x + hitboxOffsetW;
-    hitbox.y = rect.y + hitboxOffsetH;
+    entityBox.x = rect.x + hitboxOffsetW;
+    entityBox.y = rect.y + hitboxOffsetH;
+    obj_coordinates[id] = { entityBox };
 
     SDL_RenderTextureRotated(renderer, defendTexture, &subRect, &rect, 0.0, NULL, sdl_flip);
   }
 
   void Player::attack(vector<Enemy> &enemies) {
     for (int i = 0; i < enemies.size(); i++) {
-      bool contact = SDL_HasRectIntersectionFloat(&hitbox, &enemies[i].hitbox);
+      bool contact = SDL_HasRectIntersectionFloat(&entityBox, &enemies[i].entityBox);
       if (contact && !midAnimation) { 
         enemies[i].hit(damage);
       }
@@ -176,8 +163,9 @@ Player::Player() {
     subRect.y = 0;
     subRect.w = 192;
     subRect.h = 192;
-    hitbox.x = rect.x + hitboxOffsetW;
-    hitbox.y = rect.y + hitboxOffsetH;
+    entityBox.x = rect.x + hitboxOffsetW;
+    entityBox.y = rect.y + hitboxOffsetH;
+    obj_coordinates[id] = { entityBox };
 
     SDL_RenderTextureRotated(renderer, attackTexture, &subRect, &rect, 0.0, NULL, sdl_flip);
 
@@ -209,7 +197,7 @@ Player::Player() {
     else if (defending()) {
       defend();
     } else if (moving()) {
-      move(enemies);
+      move();
     } else {
       idle();
     }

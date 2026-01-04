@@ -75,7 +75,6 @@ namespace Map {
     rect.w = 192;
     rect.h = 320;
 
-    // This seems to add 3 elements to this obj, for some reason
     uintptr_t id = reinterpret_cast<uintptr_t>(&rect);
     obj_coordinates[id] = { rect };
 

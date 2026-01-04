@@ -14,7 +14,11 @@ Enemy::Enemy(
 ) {
   rect = { .x = x, .y = y, .w = 192, .h = 192 };
   subRect = {};
-  hitbox = { .w = 90, .h = 90};
+  entityBox = {
+    .x = rect.x + hitboxOffsetW,
+    .y = rect.y + hitboxOffsetH,
+    .w = 90, .h = 90
+  };
   health = 10;
   damage = 5;
   idleAnimationCounter = 0;
@@ -37,11 +41,14 @@ Enemy::Enemy(
   enemyLastFrameTime = 0;
   hitLastFrameTime = 0;
   SDL_GetTextureColorMod(idleTexture, &red, &green, &blue);
+  id = reinterpret_cast<uintptr_t>(this);
+
+  obj_coordinates[id] = { entityBox };
 }
 
 Enemy::~Enemy() {
   rect = { .x = 0, .y = 0, .w = 0, .h = 0 };  
-  hitbox = { .x = 0, .y = 0, .w = 0, .h = 0 };  
+  entityBox = { .x = 0, .y = 0, .w = 0, .h = 0 };  
 };
 
 void Enemy::update(Player *player) {
@@ -55,10 +62,10 @@ void Enemy::update(Player *player) {
   // if (SDL_HasRectIntersectionFloat(&hitbox, &player->hitbox)) {
   //   attack(player);
   // } else {
-    // trackPlayer(player);
+    trackPlayer(player);
   // }
 
-  idle();
+  // idle();
 
   if (state == HIT) {
     Uint32 now = SDL_GetTicks(); 
@@ -90,8 +97,9 @@ void Enemy::idle() {
   subRect.y = 0;
   subRect.w = 192;
   subRect.h = 192;
-  hitbox.x = rect.x + hitboxOffsetW;
-  hitbox.y = rect.y + hitboxOffsetH;
+  entityBox.x = rect.x + hitboxOffsetW;
+  entityBox.y = rect.y + hitboxOffsetH;
+  obj_coordinates[id] = { entityBox };
 
   // figure out how to maintain this for repeated attacks
   // how will this work with multiple actions, move/ attack/ block. etc.
@@ -107,27 +115,70 @@ void Enemy::trackPlayer(Player *player) {
     moveAnimationCounter = (moveAnimationCounter + 1) % moveSprites;
   }
 
+  // We can maybe make a function that sets all these to true or false
+  // much like SDL functions do
+  bool rightColision = false;
+  bool leftColision = false;
+  bool upColision = false;
+  bool downColision = false;
+
+  for (auto objRect : obj_coordinates) {
+    if(objRect.first == id) { continue; }
+    bool colision = SDL_HasRectIntersectionFloat(&entityBox, &objRect.second); 
+    if (colision) {
+      float entityBoxLeft = entityBox.x;
+      float entityBoxRight = entityBox.x + entityBox.w;
+      float entityBoxTop = entityBox.y;
+      float entityBoxBottom = entityBox.y + entityBox.h;
+
+      float objLeft = objRect.second.x;
+      float objRight = objRect.second.x + objRect.second.w;
+      float objTop = objRect.second.y;
+      float objBottom = objRect.second.y + objRect.second.h;
+
+      float overlapX = min(entityBoxRight, objRight) - max(entityBoxLeft, objLeft);
+      float overlapY = min(entityBoxBottom, objBottom) - max(entityBoxTop, objTop);
+
+      if (overlapX < overlapY) {
+        if (entityBox.x < objRect.second.x) {
+          rightColision = true;
+        } else {
+          leftColision = true;
+        }
+      } else {
+        if (entityBox.y < objRect.second.y) {
+          downColision = true;
+        } else {
+          upColision = true;
+        }
+      }
+    }
+  }
+
   int playerX = player->rect.x;
   int playerY = player->rect.y;
-  if (playerX > rect.x) {
-    rect.x += speed;
-  }
-  if (playerY > rect.y) {
-    rect.y += speed;
-  }
   if (playerX < rect.x) {
-    rect.x -= speed;
+    if (!leftColision) { rect.x -= speed; }
+    sdl_flip = SDL_FLIP_HORIZONTAL;
+  }
+  if (playerX > rect.x) {
+    if (!rightColision) { rect.x += speed; }
+    sdl_flip = SDL_FLIP_NONE;
   }
   if (playerY < rect.y) {
-    rect.y -= speed;
+    if (!upColision) { rect.y -= speed; }
+  }
+  if (playerY > rect.y) {
+    if (!downColision) { rect.y += speed; }
   }
 
   subRect.x = 192 * moveAnimationCounter;
   subRect.y = 0;
   subRect.w = 192;
   subRect.h = 192;
-  hitbox.x = rect.x + hitboxOffsetW;
-  hitbox.y = rect.y + hitboxOffsetH;
+  entityBox.x = rect.x + hitboxOffsetW;
+  entityBox.y = rect.y + hitboxOffsetH;
+  obj_coordinates[id] = { entityBox };
 
   // figure out how to maintain this for repeated attacks
   // how will this work with multiple actions, move/ attack/ block. etc.
@@ -152,8 +203,8 @@ void Enemy::trackPlayer(Player *player) {
     subRect.y = 0;
     subRect.w = 192;
     subRect.h = 192;
-    hitbox.x = rect.x + hitboxOffsetW;
-    hitbox.y = rect.y + hitboxOffsetH;
+    entityBox.x = rect.x + hitboxOffsetW;
+    entityBox.y = rect.y + hitboxOffsetH;
 
     // figure out how to maintain this for repeated attacks
     // how will this work with multiple actions, move/ attack/ block. etc.

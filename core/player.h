@@ -20,9 +20,10 @@ class Enemy;
 
 class Player {
   public:
+    uintptr_t id;
     SDL_FRect rect;
     SDL_FRect subRect;
-    SDL_FRect hitbox;
+    SDL_FRect entityBox;
     int health;
     int damage;
     int idleAnimationCounter;
@@ -46,7 +47,7 @@ class Player {
     int hitboxOffsetH = 50;
   
     void idle();
-    void move(vector<Enemy> &enemies);
+    void move();
     void attack(vector<Enemy> &enemies);
     void hit(vector<Enemy> &enemies);
     bool attacking();
