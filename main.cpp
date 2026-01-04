@@ -101,19 +101,24 @@ int main() {
   tileMapTexture = loadTexture("Terrain/Tileset/Tilemap_color2.png");
   monastaryTexture = loadTexture("Buildings/Blue Buildings/Monastery.png");
   Player player = Player();
-  Enemy enemy = Enemy(
-    enemyIdleTexture,
-    enemyMoveTexture,
-    enemyAttackTexture,
-    300,
-    600
+  vector<Enemy> enemies;
+  enemies.push_back(
+    Enemy(
+      enemyIdleTexture,
+      enemyMoveTexture,
+      enemyAttackTexture,
+      700,
+      200
+    )
   );
-  Enemy second = Enemy(
-    enemyIdleTexture,
-    enemyMoveTexture,
-    enemyAttackTexture,
-    700,
-    200
+  enemies.push_back(
+    Enemy(
+      enemyIdleTexture,
+      enemyMoveTexture,
+      enemyAttackTexture,
+      300,
+      600
+    )
   );
 
   while (state.running) {
@@ -147,11 +152,13 @@ int main() {
     }
 
     Map::update();
-    vector<Enemy*> enemies { &enemy, &second };
+    // vector<Enemy*> enemies { &enemy, &second };
     player.update(enemies);
 
+
+    printf("Enemy counter %zu\n", enemies.size());
     for (int i = 0; i < enemies.size(); i++) {
-      enemies[i]->update(&player);
+      enemies[i].update(&player);
     }
 
     // clear mouse or keycodes
@@ -160,8 +167,11 @@ int main() {
     SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
     SDL_RenderRect(renderer, &player.rect);
     SDL_RenderRect(renderer, &player.hitbox);
-    SDL_RenderRect(renderer, &enemy.rect);
-    SDL_RenderRect(renderer, &enemy.hitbox);
+
+    for(auto enemy : enemies) {
+      SDL_RenderRect(renderer, &enemy.rect);
+      SDL_RenderRect(renderer, &enemy.hitbox);
+    }
 
     SDL_RenderPresent(renderer);
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);

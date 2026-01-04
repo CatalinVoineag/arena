@@ -1,10 +1,13 @@
 #include "player.h"
 #include "../globals.h"
 #include "enemy.h"
+#include <SDL3/SDL_rect.h>
 #include <SDL3/SDL_render.h>
 #include <cstdio>
 
 #define global static
+
+map<uintptr_t, SDL_FRect> obj_coordinates;
 
 Player::Player() {
   rect = { .x = 0, .y = 0, .w = 192, .h = 192 };
@@ -50,22 +53,77 @@ Player::Player() {
     return input->keycodes[keycode] == true;
   }
 
-  void Player::move() {
+  void Player::move(vector<Enemy> &enemies) {
     Uint32 now = SDL_GetTicks();
+    bool rightColision = false;
+    bool leftColision = false;
+    bool upColision = false;
+    bool downColision = false;
+
+    for (auto enemy : enemies) {
+      bool colision = SDL_HasRectIntersectionFloat(&rect, &enemy.rect); 
+
+      if (colision) {
+        int diffInCenterX = (rect.x + rect.w) / 2 - (enemy.rect.x + enemy.rect.w) / 2;
+        int diffInCenterY = (rect.y + rect.h) / 2 - (enemy.rect.y + enemy.rect.h) / 2;
+        int combinedHalfWidths = (rect.w + enemy.rect.w) / 2;
+        int combinedHalfHights = (rect.h + enemy.rect.h) / 2;
+
+        float overlapX = combinedHalfWidths - abs(diffInCenterX);
+        float overlapY = combinedHalfHights - abs(diffInCenterY);
+        if (overlapX < overlapY) {
+          if (diffInCenterX < 0) {
+            rightColision = true;
+          } else {
+            leftColision = true;
+          }
+        } else {
+          if (diffInCenterY < 0) {
+            downColision = true;
+          } else {
+            upColision = true;
+          }
+        }
+      }
+    }
+
+    for (auto objRect : obj_coordinates) {
+      bool colision = SDL_HasRectIntersectionFloat(&rect, &objRect.second); 
+
+      if (colision) {
+        int diffInCenterX = (rect.x + rect.w) / 2  - (objRect.second.x + objRect.second.w) / 2;
+        int diffInCenterY = (rect.y + rect.h) / 2  - (objRect.second.y + objRect.second.h) / 2;
+        int combinedHalfWidths = (rect.w + objRect.second.w) / 2;
+        int combinedHalfHights = (rect.h + objRect.second.h) / 2;
+
+        float overlapX = combinedHalfWidths - abs(diffInCenterX);
+        float overlapY = combinedHalfHights - abs(diffInCenterY);
+        if (overlapX < overlapY) {
+          if (diffInCenterX < 0) {
+            rightColision = true;
+          } else {
+            leftColision = true;
+          }
+        } else {
+          if (diffInCenterY < 0) {
+            downColision = true;
+          } else {
+            upColision = true;
+          }
+        }
+      }
+    }
+
     if (pressed(SDLK_A)) {
-      rect.x -= speed;
+      if (!leftColision) { rect.x -= speed; }
       sdl_flip = SDL_FLIP_HORIZONTAL;
     }
     if (pressed(SDLK_D)) {
-      rect.x += speed;
+      if (!rightColision) { rect.x += speed; }
       sdl_flip = SDL_FLIP_NONE;
     }
-    if (pressed(SDLK_W)) {
-      rect.y -= speed;
-    }
-    if (pressed(SDLK_S)) {
-      rect.y += speed;
-    }
+    if (pressed(SDLK_W) && !upColision) { rect.y -= speed; }
+    if (pressed(SDLK_S) && !downColision) { rect.y += speed; }
 
     if (now - lastFrameTime >= frameDuration) {
       lastFrameTime = now;
@@ -99,11 +157,11 @@ Player::Player() {
     SDL_RenderTextureRotated(renderer, defendTexture, &subRect, &rect, 0.0, NULL, sdl_flip);
   }
 
-  void Player::attack(vector<Enemy*> enemies) {
+  void Player::attack(vector<Enemy> &enemies) {
     for (int i = 0; i < enemies.size(); i++) {
-      bool contact = SDL_HasRectIntersectionFloat(&hitbox, &enemies[i]->hitbox);
+      bool contact = SDL_HasRectIntersectionFloat(&hitbox, &enemies[i].hitbox);
       if (contact && !midAnimation) { 
-        enemies[i]->hit(damage);
+        enemies[i].hit(damage);
       }
     }
 
@@ -144,14 +202,14 @@ Player::Player() {
     return input->mousecodes[SDL_BUTTON_RIGHT];
   }
 
-  void Player::update(vector<Enemy*> enemies) {
+  void Player::update(vector<Enemy> &enemies) {
     if (attacking()) {
       attack(enemies);
     }
     else if (defending()) {
       defend();
     } else if (moving()) {
-      move();
+      move(enemies);
     } else {
       idle();
     }

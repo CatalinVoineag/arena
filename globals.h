@@ -15,6 +15,8 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 #include <map>
+#include <string>
+#include <vector>
 #include "core/input.h"
 using namespace std;
 
@@ -29,3 +31,4 @@ extern SDL_Texture *monastaryTexture;
 extern SDL_Renderer *renderer;
 extern SDL_Window *window;
 extern inputStruct *input;
+extern map<uintptr_t, SDL_FRect> obj_coordinates;

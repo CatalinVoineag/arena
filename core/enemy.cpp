@@ -52,13 +52,13 @@ void Enemy::update(Player *player) {
     SDL_SetTextureColorMod(attackTexture, 204, 51, 51);
   }
 
-  if (SDL_HasRectIntersectionFloat(&hitbox, &player->hitbox)) {
-    attack(player);
-  } else {
-    trackPlayer(player);
-  }
+  // if (SDL_HasRectIntersectionFloat(&hitbox, &player->hitbox)) {
+  //   attack(player);
+  // } else {
+    // trackPlayer(player);
+  // }
 
-  // idle();
+  idle();
 
   if (state == HIT) {
     Uint32 now = SDL_GetTicks(); 
