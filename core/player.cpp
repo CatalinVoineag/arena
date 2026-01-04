@@ -10,6 +10,8 @@ Player::Player() {
   rect = { .x = 0, .y = 0, .w = 192, .h = 192 };
   subRect = {};
   hitbox = { .w = 90, .h = 90 };
+  health = 20;
+  damage = 2;
   idleAnimationCounter = 0;
   idleSprites = 8;
   attackAnimationCounter = 0;
@@ -97,7 +99,14 @@ Player::Player() {
     SDL_RenderTextureRotated(renderer, defendTexture, &subRect, &rect, 0.0, NULL, sdl_flip);
   }
 
-  void Player::attack() {
+  void Player::attack(vector<Enemy*> enemies) {
+    for (int i = 0; i < enemies.size(); i++) {
+      bool contact = SDL_HasRectIntersectionFloat(&hitbox, &enemies[i]->hitbox);
+      if (contact && !midAnimation) { 
+        enemies[i]->hit(damage);
+      }
+    }
+
     Uint32 now = SDL_GetTicks(); 
     midAnimation = true;
     if (now - lastFrameTime >= frameDuration) {
@@ -113,6 +122,7 @@ Player::Player() {
     hitbox.y = rect.y + hitboxOffsetH;
 
     SDL_RenderTextureRotated(renderer, attackTexture, &subRect, &rect, 0.0, NULL, sdl_flip);
+
     if (attackAnimationCounter == attackSprites - 1) {
       attackAnimationCounter = 0;
       midAnimation = false;
@@ -130,24 +140,13 @@ Player::Player() {
     return input->mousecodes[SDL_BUTTON_LEFT] || midAnimation;
   }
 
-  void Player::hit(vector<Enemy*> enemies) {
-    for (int i = 0; i < enemies.size(); i++) {
-      bool contact = SDL_HasRectIntersectionFloat(&hitbox, &enemies[i]->hitbox);
-      if (contact && !midAnimation) {
-        // Enemy::remove();
-        enemies[i]->hit();
-      } 
-    }
-  }
-
   bool defending() {
     return input->mousecodes[SDL_BUTTON_RIGHT];
   }
 
   void Player::update(vector<Enemy*> enemies) {
     if (attacking()) {
-      attack();
-      hit(enemies);
+      attack(enemies);
     }
     else if (defending()) {
       defend();

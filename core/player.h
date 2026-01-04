@@ -21,6 +21,8 @@ class Player {
     SDL_FRect rect;
     SDL_FRect subRect;
     SDL_FRect hitbox;
+    int health;
+    int damage;
     int idleAnimationCounter;
     int idleSprites;
     int attackAnimationCounter;
@@ -43,7 +45,7 @@ class Player {
   
     void idle();
     void move();
-    void attack();
+    void attack(vector<Enemy*>);
     void hit(vector<Enemy*>);
     bool attacking();
     void defend();

@@ -23,6 +23,9 @@ class Enemy {
   SDL_FRect rect;
   SDL_FRect subRect;
   SDL_FRect hitbox;
+  enemyState state;
+  int health;
+  int damage;
   int idleAnimationCounter;
   int idleSprites;
   int attackAnimationCounter;
@@ -36,11 +39,12 @@ class Enemy {
   SDL_Texture* texture;
 
   Enemy(SDL_Texture*, float, float);
+  ~Enemy();
   void update();
-  void hit();
+  void hit(int);
+  void unhit();
 
   private:
-  enemyState state;
   int hitboxOffsetW;
   int hitboxOffsetH;
   int hitDuration;

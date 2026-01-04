@@ -7,6 +7,8 @@ Enemy::Enemy(SDL_Texture *sdl_texture, float x, float y) {
   rect = { .x = x, .y = y, .w = 192, .h = 192 };
   subRect = {};
   hitbox = { .w = 90, .h = 90};
+  health = 10;
+  damage = 5;
   idleAnimationCounter = 0;
   idleSprites = 8;
   attackAnimationCounter = 0;
@@ -27,17 +29,34 @@ Enemy::Enemy(SDL_Texture *sdl_texture, float x, float y) {
   SDL_GetTextureColorMod(texture, &red, &green, &blue);
 }
 
+Enemy::~Enemy() {
+  rect = { .x = 0, .y = 0, .w = 0, .h = 0 };  
+  hitbox = { .x = 0, .y = 0, .w = 0, .h = 0 };  
+};
+
 void Enemy::update() {
   if (state == HIT) {
+    SDL_SetTextureColorMod(texture, 204, 51, 51);
+  }
+
+  idle();
+
+  if (state == HIT) {
     Uint32 now = SDL_GetTicks(); 
+    if (hitLastFrameTime == 0) {
+      hitLastFrameTime = now; 
+    }
     if (now - hitLastFrameTime >= hitDuration) {
       hitLastFrameTime = now;
       SDL_SetTextureColorMod(texture, red, green, blue);
       state = NORMAL;
+      hitLastFrameTime = 0;
     }
   }
 
-  idle();
+  if (health <= 0) {
+    Enemy::~Enemy();
+  }
 };
 
 void Enemy::idle() {
@@ -57,14 +76,11 @@ void Enemy::idle() {
 
   // figure out how to maintain this for repeated attacks
   // how will this work with multiple actions, move/ attack/ block. etc.
-  if (state == HIT) {
-    SDL_SetTextureColorMod(texture, 204, 51, 51);
-  }
   SDL_RenderTextureRotated(renderer, texture, &subRect, &rect, 0.0, NULL, sdl_flip);
-
   SDL_SetTextureColorMod(texture, 255, 255, 255);
 }
 
-void Enemy::hit() {
+void Enemy::hit(int damage) {
   state = HIT;
+  health -= damage;
 }
