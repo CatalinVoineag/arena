@@ -12,6 +12,7 @@
 #include <SDL3/SDL_timer.h>
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
+class Player;
 
 typedef enum enemyState {
   NORMAL,
@@ -34,13 +35,21 @@ class Enemy {
   int defendSprites;
   int moveAnimationCounter;
   int moveSprites;
-  int speed;
+  float speed;
   SDL_FlipMode sdl_flip;
-  SDL_Texture* texture;
+  SDL_Texture* idleTexture;
+  SDL_Texture* moveTexture;
+  SDL_Texture* attackTexture;
 
-  Enemy(SDL_Texture*, float, float);
+  Enemy(
+    SDL_Texture* idle_texture,
+    SDL_Texture* move_texture,
+    SDL_Texture* attac_texture,
+    float x,
+    float y
+  );
   ~Enemy();
-  void update();
+  void update(Player* player);
   void hit(int);
   void unhit();
 
@@ -55,4 +64,6 @@ class Enemy {
   Uint8 blue;
 
   void idle();
+  void trackPlayer(Player*);
+  void attack(Player*);
 };

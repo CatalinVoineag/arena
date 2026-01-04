@@ -16,6 +16,8 @@
 #include "../globals.h"
 #include "enemy.h"
 
+class Enemy;
+
 class Player {
   public:
     SDL_FRect rect;
@@ -31,7 +33,7 @@ class Player {
     int defendSprites;
     int moveAnimationCounter;
     int moveSprites;
-    int speed;
+    float speed;
     SDL_FlipMode sdl_flip;
     bool midAnimation;
 

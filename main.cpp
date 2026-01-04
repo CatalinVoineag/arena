@@ -76,6 +76,8 @@ SDL_Texture *moveTexture;
 SDL_Texture *attackTexture;
 SDL_Texture *defendTexture;
 SDL_Texture *enemyIdleTexture;
+SDL_Texture *enemyMoveTexture;
+SDL_Texture *enemyAttackTexture;
 SDL_Texture *tileMapTexture;
 SDL_Texture *monastaryTexture;
 
@@ -94,11 +96,25 @@ int main() {
   attackTexture = loadTexture("Units/Warrior/Warrior_Attack1.png");
   defendTexture = loadTexture("Units/Warrior/Warrior_Guard.png");
   enemyIdleTexture = loadTexture("Units/Red/Warrior/Warrior_Idle.png");
+  enemyMoveTexture = loadTexture("Units/Red/Warrior/Warrior_Run.png");
+  enemyAttackTexture = loadTexture("Units/Red/Warrior/Warrior_Attack1.png");
   tileMapTexture = loadTexture("Terrain/Tileset/Tilemap_color2.png");
   monastaryTexture = loadTexture("Buildings/Blue Buildings/Monastery.png");
   Player player = Player();
-  Enemy enemy = Enemy(enemyIdleTexture, 300, 600);
-  Enemy second = Enemy(enemyIdleTexture, 700, 200);
+  Enemy enemy = Enemy(
+    enemyIdleTexture,
+    enemyMoveTexture,
+    enemyAttackTexture,
+    300,
+    600
+  );
+  Enemy second = Enemy(
+    enemyIdleTexture,
+    enemyMoveTexture,
+    enemyAttackTexture,
+    700,
+    200
+  );
 
   while (state.running) {
     SDL_Event event;
@@ -135,7 +151,7 @@ int main() {
     player.update(enemies);
 
     for (int i = 0; i < enemies.size(); i++) {
-      enemies[i]->update();
+      enemies[i]->update(&player);
     }
 
     // clear mouse or keycodes
