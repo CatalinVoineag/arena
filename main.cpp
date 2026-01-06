@@ -141,20 +141,17 @@ int main() {
           input->mousecodes[event.button.button] = event.button;
 
           SDL_FPoint clickPoint = { event.button.x, event.button.y};
+
           string wIndex = to_string((int) event.button.x / 64);
           string hIndex = to_string((int) event.button.y / 64);
-          string key = wIndex + "_" + hIndex;
-          auto node = gameMap.mapNodes.find(key);
 
-          if (node != gameMap.mapNodes.end()) {
-            if (node->second.clicked == true) {
-              node->second.clicked = false;
-              node->second.obstacle = false;
-            } else {
-              node->second.clicked = true;
-              node->second.obstacle = true;
-            }
-          } 
+          int xIndex = event.button.x / 64;
+          int yIndex = event.button.y / 64;
+          int key = yIndex * gameMap.mapArray[0].size() + xIndex; 
+          printf("Click X %f Y %f\n", event.button.x, event.button.y);
+
+          gameMap.mapNodes[key].clicked = !gameMap.mapNodes[key].clicked;
+          gameMap.mapNodes[key].obstacle = !gameMap.mapNodes[key].obstacle;
 
           break;
         }

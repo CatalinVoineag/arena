@@ -3,7 +3,9 @@
 
 class Map {
   public:
-  map<string, MapNode> mapNodes;
+  // map<string, MapNode> mapNodes;
+  map<int, MapNode> mapNodes;
+  vector<vector<int>> mapArray;
 
   Map();
   void update(Player player);
