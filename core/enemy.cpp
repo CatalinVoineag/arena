@@ -62,10 +62,10 @@ void Enemy::update(Player *player) {
   // if (SDL_HasRectIntersectionFloat(&hitbox, &player->hitbox)) {
   //   attack(player);
   // } else {
-    trackPlayer(player);
+    // trackPlayer(player);
   // }
 
-  // idle();
+  idle();
 
   if (state == HIT) {
     Uint32 now = SDL_GetTicks(); 

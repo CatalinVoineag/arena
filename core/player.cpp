@@ -183,11 +183,12 @@ Player::Player() {
   };
 
   bool Player::attacking() {
-    return input->mousecodes[SDL_BUTTON_LEFT] || midAnimation;
+    // return input->mousecodes[SDL_BUTTON_LEFT] || midAnimation;
+    return false;
   }
 
   bool defending() {
-    return input->mousecodes[SDL_BUTTON_RIGHT];
+    return input->mousecodes[SDL_BUTTON_RIGHT].down;
   }
 
   void Player::update(vector<Enemy> &enemies) {

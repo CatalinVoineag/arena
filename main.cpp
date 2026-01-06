@@ -100,9 +100,9 @@ int main() {
   enemyAttackTexture = loadTexture("Units/Red/Warrior/Warrior_Attack1.png");
   tileMapTexture = loadTexture("Terrain/Tileset/Tilemap_color2.png");
   monastaryTexture = loadTexture("Buildings/Blue Buildings/Monastery.png");
+  Map gameMap = Map();
   Player player = Player();
 
-  printf("PLAYER ENITYT X %f, Y %f, W %f, H %f \n", player.entityBox.x, player.entityBox.y, player.entityBox.w, player.entityBox.h);
   vector<Enemy> enemies;
   Enemy enemy = Enemy(
     enemyIdleTexture,
@@ -133,12 +133,33 @@ int main() {
         case SDL_EVENT_QUIT:
           state.running = false;
           break;
+        case SDL_EVENT_MOUSE_MOTION: {
+          // printf("MOUSE X %f Y %f\n", event.motion.x, event.motion.y);
+          break;
+        }
         case SDL_EVENT_MOUSE_BUTTON_DOWN: {
-          input->mousecodes[event.button.button] = event.button.down;
+          input->mousecodes[event.button.button] = event.button;
+
+          SDL_FPoint clickPoint = { event.button.x, event.button.y};
+          string wIndex = to_string((int) event.button.x / 64);
+          string hIndex = to_string((int) event.button.y / 64);
+          string key = wIndex + "_" + hIndex;
+          auto node = gameMap.mapNodes.find(key);
+
+          if (node != gameMap.mapNodes.end()) {
+            if (node->second.clicked == true) {
+              node->second.clicked = false;
+              node->second.obstacle = false;
+            } else {
+              node->second.clicked = true;
+              node->second.obstacle = true;
+            }
+          } 
+
           break;
         }
         case SDL_EVENT_MOUSE_BUTTON_UP: {
-          input->mousecodes[event.button.button] = event.button.down;
+          input->mousecodes[event.button.button] = event.button;
           break;
         }
         case SDL_EVENT_KEY_DOWN: {
@@ -151,14 +172,14 @@ int main() {
       }
     }
 
-    Map::update();
+    gameMap.update(player);
     player.update(enemies);
     for (int i = 0; i < enemies.size(); i++) {
       enemies[i].update(&player);
     }
 
     // clear mouse or keycodes
-    input->mousecodes[SDL_BUTTON_LEFT] = false;
+    // input->mousecodes.erase(SDL_BUTTON_LEFT);
 
     SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
     SDL_RenderRect(renderer, &player.rect);
