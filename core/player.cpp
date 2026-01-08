@@ -191,7 +191,7 @@ Player::Player() {
     return input->mousecodes[SDL_BUTTON_RIGHT].down;
   }
 
-  void Player::update(vector<Enemy> &enemies) {
+  void Player::update(vector<Enemy> &enemies, Map &gameMap) {
     if (attacking()) {
       attack(enemies);
     }
@@ -202,4 +202,8 @@ Player::Player() {
     } else {
       idle();
     }
+
+    int xIndex = (entityBox.x + entityBox.w / 2) / 64;
+    int yIndex = (entityBox.y + entityBox.h / 2) / 64;
+    mapNodeIndex = yIndex * gameMap.mapArray[0].size() + xIndex; 
   }

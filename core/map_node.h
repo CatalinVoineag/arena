@@ -8,7 +8,14 @@ class MapNode {
   SDL_FRect subRect;
   bool clicked;
   bool obstacle;
+  bool start;
+  bool end;
+  bool seen;
   vector<MapNode*> neighbors;
+  MapNode *parent;
+  float localGoal;
+  float globalGoal;
+
   MapNode() // default constructor
     : rect{0, 0, 0, 0}, subRect{0, 0, 0, 0} {}
 

@@ -19,6 +19,8 @@ typedef enum enemyState {
   HIT,
 } enemyState;
 
+class Map;
+
 class Enemy {
   public:
   uintptr_t id;
@@ -36,6 +38,7 @@ class Enemy {
   int defendSprites;
   int moveAnimationCounter;
   int moveSprites;
+  int mapNodeIndex;
   float speed;
   SDL_FlipMode sdl_flip;
   SDL_Texture* idleTexture;
@@ -50,7 +53,7 @@ class Enemy {
     float y
   );
   ~Enemy();
-  void update(Player* player);
+  void update(Player* player, Map &gameMap);
   void hit(int);
   void unhit();
 
@@ -65,6 +68,6 @@ class Enemy {
   Uint8 blue;
 
   void idle();
-  void trackPlayer(Player*);
-  void attack(Player*);
+  void trackPlayer(Player* player, Map &gameMap);
+  void attack(Player* player);
 };

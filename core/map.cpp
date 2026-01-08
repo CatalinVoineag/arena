@@ -1,9 +1,15 @@
 #include "map.h"
+#include "player.h"
 #include "../globals.h"
 #include <SDL3/SDL_rect.h>
 #include <SDL3/SDL_render.h>
-#include <cmath>
 #include <vector>
+
+auto* debug_get_node(std::map<int, MapNode>& m, int key) {
+    auto it = m.find(key);
+    return it == m.end() ? nullptr : &it->second;
+}
+
 
 #define global static
 
@@ -57,14 +63,11 @@ Map::Map() {
       int key = y * mapArray[0].size() + x;
       MapNode node = MapNode(rect, subRect);
       mapNodes.emplace(key, MapNode(rect, subRect));
-
-      printf("key=%d x=%d y=%d rect=(%f,%f) sub=(%f,%f)\n", key, x, y, rect.x, rect.y, subRect.x, subRect.y);
     }
   }
 
   for (int x = 0; x < mapArray[0].size(); x++) {
     for (int y = 0; y < mapArray.size(); y++) {
-
       int key = y * mapArray[0].size() + x;
 
       if (x > 0) {
@@ -83,16 +86,36 @@ Map::Map() {
         int nodeBelowKey = (y + 1) * mapArray[0].size() + (x + 0);
         mapNodes[key].neighbors.push_back(&mapNodes[nodeBelowKey]);
       }
-    }
 
+      // if (y > 0 && x > 0) {
+      //   int nodeLeftKey = (y - 1) * mapArray[0].size() + (x - 1);
+      //   mapNodes[key].neighbors.push_back(&mapNodes[nodeLeftKey]);
+      // }
+      // if (y < mapArray.size() - 1 && x > 0) {
+      //   int nodeLeftKey = (y + 1) * mapArray[0].size() + (x - 1);
+      //   mapNodes[key].neighbors.push_back(&mapNodes[nodeLeftKey]);
+      // }
+      // if (y > 0 && x < mapArray[0].size() - 1) {
+      //   int nodeLeftKey = (y - 1) * mapArray[0].size() + (x + 1);
+      //   mapNodes[key].neighbors.push_back(&mapNodes[nodeLeftKey]);
+      // }
+      // if (y < mapArray.size() - 1 && x < mapArray[0].size() - 1) {
+      //   int nodeLeftKey = (y + 1) * mapArray[0].size() + (x + 1);
+      //   mapNodes[key].neighbors.push_back(&mapNodes[nodeLeftKey]);
+      // }  
+    }
   }
   SDL_GetTextureColorMod(idleTexture, &red, &green, &blue);
 }
 
-void Map::update(Player player) {
+void Map::update(const Player &player) {
   for (const auto& [key, value] : mapNodes) {
-    if (value.clicked) {
+    if (value.clicked || player.mapNodeIndex == key) {
       SDL_SetTextureColorMod(tileMapTexture, 204, 51, 51);
+    } else if (value.start) {
+      SDL_SetTextureColorMod(tileMapTexture, 0, 255, 0);
+    } else if (value.end) {
+      SDL_SetTextureColorMod(tileMapTexture, 255, 0, 0);
     } else {
       SDL_SetTextureColorMod(tileMapTexture, red, green, blue);
     }
@@ -107,20 +130,19 @@ void Map::update(Player player) {
     SDL_RenderRect(renderer, &value.rect);
   }
 
-  for (const auto& [key, value] : mapNodes) {
-    if (value.clicked) {
-      for (auto neighbor : value.neighbors) {
-        SDL_SetTextureColorMod(tileMapTexture, 204, 51, 51);
-        SDL_RenderTexture(
-          renderer,
-          tileMapTexture,
-          &neighbor->subRect,
-          &neighbor->rect
-        );
-      }
-      SDL_RenderRect(renderer, &value.rect);
-    }
-  };
+  MapNode* end = &mapNodes[player.mapNodeIndex];
+
+  while (end->parent != nullptr) {
+    SDL_SetRenderDrawColor(renderer, 0, 0, 255, SDL_ALPHA_OPAQUE);
+    SDL_RenderLine(
+      renderer,
+      end->rect.x + 64 / 2,
+      end->rect.y + 64 / 2,
+      end->parent->rect.x + 64 / 2,
+      end->parent->rect.y + 64 / 2
+    );
+    end = end->parent;
+  } 
 
   SDL_FRect rect;
   rect.x = 800;

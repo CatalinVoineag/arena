@@ -1,19 +1,6 @@
 #pragma once
-#include <SDL3/SDL_audio.h>
-#include <SDL3/SDL_events.h>
-#include <SDL3/SDL_gamepad.h>
-#include <SDL3/SDL_init.h>
-#include <SDL3/SDL_init.h>
-#include <SDL3/SDL_log.h>
-#include <SDL3/SDL_rect.h>
-#include <SDL3/SDL_render.h>
-#include <SDL3/SDL_surface.h>
-#include <SDL3/SDL_video.h>
-#include <SDL3/SDL_timer.h>
-#include <SDL3/SDL.h>
-#include <SDL3/SDL_main.h>
-#include <vector>
 #include "../globals.h"
+#include "map.h"
 #include "enemy.h"
 
 class Enemy;
@@ -34,12 +21,13 @@ class Player {
     int defendSprites;
     int moveAnimationCounter;
     int moveSprites;
+    int mapNodeIndex;
     float speed;
     SDL_FlipMode sdl_flip;
     bool midAnimation;
 
     Player();
-    void update(vector<Enemy> &enemies);
+    void update(vector<Enemy> &enemies, Map &gameMap);
 
   private:
     Uint32 lastFrameTime = 0;

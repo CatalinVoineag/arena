@@ -1,7 +1,6 @@
 #include "core/player.h"
 #include "core/input.h"
 #include "core/enemy.h"
-#include "core/map.h"
 #include "globals.h"
 #include <SDL3/SDL_oldnames.h>
 #include <SDL3/SDL_rect.h>
@@ -81,6 +80,66 @@ SDL_Texture *enemyAttackTexture;
 SDL_Texture *tileMapTexture;
 SDL_Texture *monastaryTexture;
 
+
+float distanceToRect(SDL_FRect start, SDL_FRect end) {
+  float x = start.x - end.x;
+  float y = start.y - end.y;
+  return sqrt(pow(x, 2) + pow(y, 2));
+};
+
+void solveAStar(Map &gameMap, Player &player, Enemy &enemy) {
+  for (int x = 0; x < gameMap.mapArray[0].size(); x++) {
+    for (int y = 0; y < gameMap.mapArray.size(); y++) {
+      int key = y * gameMap.mapArray[0].size() + x;
+      gameMap.mapNodes[key].seen = false;
+      gameMap.mapNodes[key].globalGoal = INFINITY;
+      gameMap.mapNodes[key].localGoal = INFINITY;
+      gameMap.mapNodes[key].parent = nullptr;	// No parents
+    }
+}
+
+  MapNode* start = &gameMap.mapNodes[enemy.mapNodeIndex];
+  MapNode* end = &gameMap.mapNodes[player.mapNodeIndex]; 
+
+  MapNode *currentNode = start;
+  currentNode->localGoal = 0.0f;
+  currentNode->globalGoal = distanceToRect(start->rect, end->rect);
+
+  list<MapNode*> nodeList;
+  nodeList.push_back(start);
+
+  while (!nodeList.empty()) {
+    nodeList.sort([](const MapNode* first, const MapNode* second) {
+      return first->globalGoal < second->globalGoal;
+    });
+
+    while (!nodeList.empty() && nodeList.front()->seen) {
+      nodeList.pop_front();
+    }
+
+    if (nodeList.empty()) {
+      break;
+    }
+
+    currentNode = nodeList.front();
+    currentNode->seen = true;
+
+    for (auto neighbor : currentNode->neighbors) {
+      if (!neighbor->seen && !neighbor->obstacle) {
+        nodeList.push_back(neighbor);
+      }
+
+      float possibleLocalGoal = currentNode->localGoal + distanceToRect(currentNode->rect, neighbor->rect); 
+
+      if (possibleLocalGoal < neighbor->localGoal) {
+        neighbor->parent = currentNode;
+        neighbor->localGoal = possibleLocalGoal;
+        neighbor->globalGoal = neighbor->localGoal + distanceToRect(neighbor->rect, end->rect);
+      }
+    } 
+  }
+}
+
 int main() {
   SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
   if (!SDL_CreateWindowAndRenderer("Word", 1920, 1080, SDL_WINDOW_EXTERNAL, &window, &renderer)) {
@@ -112,14 +171,14 @@ int main() {
     600
   );
   enemies.push_back(enemy);
-  Enemy second = Enemy(
-    enemyIdleTexture,
-    enemyMoveTexture,
-    enemyAttackTexture,
-    300,
-    600
-  );
-  enemies.push_back(second);
+  // Enemy second = Enemy(
+  //   enemyIdleTexture,
+  //   enemyMoveTexture,
+  //   enemyAttackTexture,
+  //   300,
+  //   600
+  // );
+  // enemies.push_back(second);
 
   while (state.running) {
     SDL_Event event;
@@ -140,19 +199,12 @@ int main() {
         case SDL_EVENT_MOUSE_BUTTON_DOWN: {
           input->mousecodes[event.button.button] = event.button;
 
-          SDL_FPoint clickPoint = { event.button.x, event.button.y};
-
-          string wIndex = to_string((int) event.button.x / 64);
-          string hIndex = to_string((int) event.button.y / 64);
-
           int xIndex = event.button.x / 64;
           int yIndex = event.button.y / 64;
           int key = yIndex * gameMap.mapArray[0].size() + xIndex; 
-          printf("Click X %f Y %f\n", event.button.x, event.button.y);
 
           gameMap.mapNodes[key].clicked = !gameMap.mapNodes[key].clicked;
           gameMap.mapNodes[key].obstacle = !gameMap.mapNodes[key].obstacle;
-
           break;
         }
         case SDL_EVENT_MOUSE_BUTTON_UP: {
@@ -169,10 +221,12 @@ int main() {
       }
     }
 
+    solveAStar(gameMap, player, enemies[0]);
+
     gameMap.update(player);
-    player.update(enemies);
+    player.update(enemies, gameMap);
     for (int i = 0; i < enemies.size(); i++) {
-      enemies[i].update(&player);
+      enemies[i].update(&player, gameMap);
     }
 
     // clear mouse or keycodes

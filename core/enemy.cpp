@@ -1,5 +1,6 @@
 #include "enemy.h"
 #include "player.h"
+#include "map.h"
 #include "../globals.h"
 #include <SDL3/SDL_rect.h>
 #include <SDL3/SDL_render.h>
@@ -51,7 +52,7 @@ Enemy::~Enemy() {
   entityBox = { .x = 0, .y = 0, .w = 0, .h = 0 };  
 };
 
-void Enemy::update(Player *player) {
+void Enemy::update(Player *player, Map &gameMap) {
   if (state == HIT) {
     // set the correct color to the correct texture based on state?
     SDL_SetTextureColorMod(idleTexture, 204, 51, 51);
@@ -62,10 +63,10 @@ void Enemy::update(Player *player) {
   // if (SDL_HasRectIntersectionFloat(&hitbox, &player->hitbox)) {
   //   attack(player);
   // } else {
-    // trackPlayer(player);
+    trackPlayer(player, gameMap);
   // }
 
-  idle();
+  // idle();
 
   if (state == HIT) {
     Uint32 now = SDL_GetTicks(); 
@@ -83,6 +84,10 @@ void Enemy::update(Player *player) {
   if (health <= 0) {
     Enemy::~Enemy();
   }
+
+  int xIndex = (entityBox.x + entityBox.w / 2) / 64;
+  int yIndex = (entityBox.y + entityBox.h / 2) / 64;
+  mapNodeIndex = yIndex * gameMap.mapArray[0].size() + xIndex; 
 };
 
 void Enemy::idle() {
@@ -107,7 +112,7 @@ void Enemy::idle() {
   SDL_SetTextureColorMod(idleTexture, 255, 255, 255);
 }
 
-void Enemy::trackPlayer(Player *player) {
+void Enemy::trackPlayer(Player *player, Map &gameMap) {
   Uint32 now = SDL_GetTicks();
 
   if (now - enemyLastFrameTime >= frameDuration) {
@@ -155,21 +160,31 @@ void Enemy::trackPlayer(Player *player) {
     }
   }
 
-  int playerX = player->rect.x;
-  int playerY = player->rect.y;
-  if (playerX < rect.x) {
-    if (!leftColision) { rect.x -= speed; }
-    sdl_flip = SDL_FLIP_HORIZONTAL;
-  }
-  if (playerX > rect.x) {
-    if (!rightColision) { rect.x += speed; }
-    sdl_flip = SDL_FLIP_NONE;
-  }
-  if (playerY < rect.y) {
-    if (!upColision) { rect.y -= speed; }
-  }
-  if (playerY > rect.y) {
-    if (!downColision) { rect.y += speed; }
+  vector<MapNode*> nodes;
+  MapNode* end = &gameMap.mapNodes[player->mapNodeIndex];
+
+  while (end->parent != nullptr) {
+    nodes.push_back(end);
+    end = end->parent;
+  } 
+
+  if (!nodes.empty()) {
+    int nodeX = nodes.back()->rect.x;
+    int nodeY = nodes.back()->rect.y;
+    if (nodeX + 5 < entityBox.x) {
+      if (!leftColision) { rect.x -= speed; }
+      sdl_flip = SDL_FLIP_HORIZONTAL;
+    }
+    if (nodeX + 5 > entityBox.x) {
+      if (!rightColision) { rect.x += speed; }
+      sdl_flip = SDL_FLIP_NONE;
+    }
+    if (nodeY < entityBox.y) {
+      if (!upColision) { rect.y -= speed; }
+    }
+    if (nodeY > entityBox.y) {
+      if (!downColision) { rect.y += speed; }
+    }
   }
 
   subRect.x = 192 * moveAnimationCounter;
