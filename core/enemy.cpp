@@ -30,7 +30,7 @@ Enemy::Enemy(
   defendSprites = 6;
   moveAnimationCounter = 0;
   moveSprites = 6;
-  speed = 2;
+  speed = 1;
   sdl_flip = SDL_FLIP_NONE;
   hitboxOffsetW = 55;
   hitboxOffsetH = 50;

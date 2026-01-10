@@ -87,22 +87,22 @@ Map::Map() {
         mapNodes[key].neighbors.push_back(&mapNodes[nodeBelowKey]);
       }
 
-      // if (y > 0 && x > 0) {
-      //   int nodeLeftKey = (y - 1) * mapArray[0].size() + (x - 1);
-      //   mapNodes[key].neighbors.push_back(&mapNodes[nodeLeftKey]);
-      // }
-      // if (y < mapArray.size() - 1 && x > 0) {
-      //   int nodeLeftKey = (y + 1) * mapArray[0].size() + (x - 1);
-      //   mapNodes[key].neighbors.push_back(&mapNodes[nodeLeftKey]);
-      // }
-      // if (y > 0 && x < mapArray[0].size() - 1) {
-      //   int nodeLeftKey = (y - 1) * mapArray[0].size() + (x + 1);
-      //   mapNodes[key].neighbors.push_back(&mapNodes[nodeLeftKey]);
-      // }
-      // if (y < mapArray.size() - 1 && x < mapArray[0].size() - 1) {
-      //   int nodeLeftKey = (y + 1) * mapArray[0].size() + (x + 1);
-      //   mapNodes[key].neighbors.push_back(&mapNodes[nodeLeftKey]);
-      // }  
+      if (y > 0 && x > 0) {
+        int nodeLeftKey = (y - 1) * mapArray[0].size() + (x - 1);
+        mapNodes[key].neighbors.push_back(&mapNodes[nodeLeftKey]);
+      }
+      if (y < mapArray.size() - 1 && x > 0) {
+        int nodeLeftKey = (y + 1) * mapArray[0].size() + (x - 1);
+        mapNodes[key].neighbors.push_back(&mapNodes[nodeLeftKey]);
+      }
+      if (y > 0 && x < mapArray[0].size() - 1) {
+        int nodeLeftKey = (y - 1) * mapArray[0].size() + (x + 1);
+        mapNodes[key].neighbors.push_back(&mapNodes[nodeLeftKey]);
+      }
+      if (y < mapArray.size() - 1 && x < mapArray[0].size() - 1) {
+        int nodeLeftKey = (y + 1) * mapArray[0].size() + (x + 1);
+        mapNodes[key].neighbors.push_back(&mapNodes[nodeLeftKey]);
+      }  
     }
   }
   SDL_GetTextureColorMod(idleTexture, &red, &green, &blue);

@@ -108,7 +108,7 @@ void solveAStar(Map &gameMap, Player &player, Enemy &enemy) {
   list<MapNode*> nodeList;
   nodeList.push_back(start);
 
-  while (!nodeList.empty()) {
+  while (!nodeList.empty() && currentNode != end) {
     nodeList.sort([](const MapNode* first, const MapNode* second) {
       return first->globalGoal < second->globalGoal;
     });
@@ -182,6 +182,8 @@ int main() {
 
   while (state.running) {
     SDL_Event event;
+    uint64_t PerfCountFrequency = SDL_GetPerformanceFrequency();
+    uint64_t LastCounter = SDL_GetPerformanceCounter();
 
     if (state.gameOver) {
     } else {
@@ -220,7 +222,6 @@ int main() {
           break;
       }
     }
-
     solveAStar(gameMap, player, enemies[0]);
 
     gameMap.update(player);
@@ -244,11 +245,21 @@ int main() {
       SDL_RenderRect(renderer, &obj.second);
     }
 
+    uint64_t EndCounter = SDL_GetPerformanceCounter();
+    uint64_t CounterElapsed = EndCounter - LastCounter;
+    double MSPerFrame(((1000.0f * (double)CounterElapsed) / (double)PerfCountFrequency));
+    double FPS = (double)PerfCountFrequency / (double)CounterElapsed;
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);  /* white, full alpha */
+    string fps = string("FPS ") + to_string(FPS);
+    SDL_SetRenderScale(renderer, 2.0f, 2.0f);
+    SDL_RenderDebugText(renderer, 825, 25, fps.c_str());
+    SDL_SetRenderScale(renderer, 1.0f, 1.0f);
+
     SDL_RenderPresent(renderer);
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
 
-    SDL_Delay(16);
+    LastCounter = EndCounter;
   }
 
   for (int i = 0; i < surfaces.size(); i++){

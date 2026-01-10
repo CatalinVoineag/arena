@@ -26,7 +26,7 @@ Player::Player() {
   defendSprites = 6;
   moveAnimationCounter = 0;
   moveSprites = 6;
-  speed = 5;
+  speed = 3;
   sdl_flip = SDL_FLIP_NONE;
   midAnimation = false;
   lastFrameTime = 0;
