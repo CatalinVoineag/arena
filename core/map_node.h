@@ -15,11 +15,12 @@ class MapNode {
   MapNode *parent;
   float localGoal;
   float globalGoal;
+  int key;
 
   MapNode() // default constructor
     : rect{0, 0, 0, 0}, subRect{0, 0, 0, 0} {}
 
-  MapNode(SDL_FRect rect, SDL_FRect subRect);
+  MapNode(SDL_FRect rect, SDL_FRect subRect, int key);
 
   private:
 };

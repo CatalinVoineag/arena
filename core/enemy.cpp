@@ -1,6 +1,7 @@
 #include "enemy.h"
 #include "player.h"
 #include "map.h"
+#include "pathing.h"
 #include "../globals.h"
 #include <SDL3/SDL_rect.h>
 #include <SDL3/SDL_render.h>
@@ -15,6 +16,8 @@ Enemy::Enemy(
 ) {
   rect = { .x = x, .y = y, .w = 192, .h = 192 };
   subRect = {};
+  hitboxOffsetH = 50;
+  hitboxOffsetW = 55;
   entityBox = {
     .x = rect.x + hitboxOffsetW,
     .y = rect.y + hitboxOffsetH,
@@ -32,8 +35,6 @@ Enemy::Enemy(
   moveSprites = 6;
   speed = 500;
   sdl_flip = SDL_FLIP_NONE;
-  hitboxOffsetW = 55;
-  hitboxOffsetH = 50;
   hitDuration = 1000;
   state = NORMAL;
   idleTexture = idle_texture;
@@ -53,6 +54,13 @@ Enemy::~Enemy() {
 };
 
 void Enemy::update(Player *player, Map &gameMap) {
+  int xIndex = (entityBox.x + entityBox.w / 2) / 64;
+  int yIndex = (entityBox.y + entityBox.h / 2) / 64;
+  mapNodeIndex = yIndex * gameMap.mapArray[0].size() + xIndex; 
+
+  Pathing pathing = Pathing();
+  vector<MapNode*> nodes = pathing.solveAStar(gameMap, mapNodeIndex, player->mapNodeIndex);
+
   if (state == HIT) {
     // set the correct color to the correct texture based on state?
     SDL_SetTextureColorMod(idleTexture, 204, 51, 51);
@@ -63,10 +71,10 @@ void Enemy::update(Player *player, Map &gameMap) {
   // if (SDL_HasRectIntersectionFloat(&hitbox, &player->hitbox)) {
   //   attack(player);
   // } else {
-    trackPlayer(player, gameMap);
+    // trackPlayer(player, gameMap, nodes);
   // }
 
-  // idle();
+  idle();
 
   if (state == HIT) {
     Uint32 now = SDL_GetTicks(); 
@@ -85,9 +93,22 @@ void Enemy::update(Player *player, Map &gameMap) {
     Enemy::~Enemy();
   }
 
-  int xIndex = (entityBox.x + entityBox.w / 2) / 64;
-  int yIndex = (entityBox.y + entityBox.h / 2) / 64;
-  mapNodeIndex = yIndex * gameMap.mapArray[0].size() + xIndex; 
+  SDL_SetRenderDrawColor(renderer, 0, 0, 255, SDL_ALPHA_OPAQUE);
+
+  for (size_t i = 1; i < nodes.size(); ++i) {
+      MapNode* from = nodes[i-1];
+      MapNode* to   = nodes[i];
+      
+      SDL_RenderLine(
+          renderer,
+          from->rect.x + 32,
+          from->rect.y + 32,
+          to->rect.x + 32,
+          to->rect.y + 32
+      );
+  }
+
+  SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
 };
 
 void Enemy::idle() {
@@ -112,8 +133,8 @@ void Enemy::idle() {
   SDL_SetTextureColorMod(idleTexture, 255, 255, 255);
 }
 
-void Enemy::trackPlayer(Player *player, Map &gameMap) {
-  uint64_t now = SDL_GetTicks();
+void Enemy::trackPlayer(Player *player, Map &gameMap, vector<MapNode*> nodes) {
+  Uint32 now = SDL_GetTicks();
 
   if (now - enemyLastFrameTime >= frameDuration) {
     enemyLastFrameTime = now;
@@ -160,13 +181,13 @@ void Enemy::trackPlayer(Player *player, Map &gameMap) {
     }
   }
 
-  vector<MapNode*> nodes;
-  MapNode* end = &gameMap.mapNodes[player->mapNodeIndex];
-
-  while (end->parent != nullptr) {
-    nodes.push_back(end);
-    end = end->parent;
-  } 
+  // vector<MapNode*> nodes;
+  // MapNode* end = &gameMap.mapNodes[player->mapNodeIndex];
+  //
+  // while (end->parent != nullptr) {
+  //   nodes.push_back(end);
+  //   end = end->parent;
+  // } 
 
   float deltaTime = (now - lastTicks) / 1000.0f;
 
@@ -175,8 +196,8 @@ void Enemy::trackPlayer(Player *player, Map &gameMap) {
   }
 
   if (!nodes.empty()) {
-    int nodeX = nodes.back()->rect.x;
-    int nodeY = nodes.back()->rect.y;
+    int nodeX = nodes.front()->rect.x;
+    int nodeY = nodes.front()->rect.y;
     if (nodeX + 5 < entityBox.x) {
       if (!leftColision) { rect.x -= speed * deltaTime; }
       sdl_flip = SDL_FLIP_HORIZONTAL;

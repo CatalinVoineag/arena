@@ -61,8 +61,7 @@ Map::Map() {
       subRect.h = 64;
 
       int key = y * mapArray[0].size() + x;
-      MapNode node = MapNode(rect, subRect);
-      mapNodes.emplace(key, MapNode(rect, subRect));
+      mapNodes.emplace(key, MapNode(rect, subRect, key));
     }
   }
 
@@ -129,20 +128,6 @@ void Map::update(const Player &player) {
 
     SDL_RenderRect(renderer, &value.rect);
   }
-
-  MapNode* end = &mapNodes[player.mapNodeIndex];
-
-  while (end->parent != nullptr) {
-    SDL_SetRenderDrawColor(renderer, 0, 0, 255, SDL_ALPHA_OPAQUE);
-    SDL_RenderLine(
-      renderer,
-      end->rect.x + 64 / 2,
-      end->rect.y + 64 / 2,
-      end->parent->rect.x + 64 / 2,
-      end->parent->rect.y + 64 / 2
-    );
-    end = end->parent;
-  } 
 
   SDL_FRect rect;
   rect.x = 800;

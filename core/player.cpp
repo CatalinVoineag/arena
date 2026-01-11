@@ -1,7 +1,6 @@
 #include "player.h"
 #include "../globals.h"
 #include "enemy.h"
-#include <SDL3/SDL_oldnames.h>
 #include <SDL3/SDL_rect.h>
 #include <SDL3/SDL_render.h>
 #include <SDL3/SDL_timer.h>
@@ -107,9 +106,7 @@ Player::Player() {
     }
 
     if (pressed(SDLK_A)) {
-      if (!leftColision) {
-        rect.x -= speed * deltaTime;
-      }
+      if (!leftColision) { rect.x -= speed * deltaTime; }
       sdl_flip = SDL_FLIP_HORIZONTAL;
     }
     if (pressed(SDLK_D)) {

@@ -12,14 +12,17 @@
 #include <SDL3/SDL_timer.h>
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
-class Player;
+#include <vector>
+using namespace std;
 
 typedef enum enemyState {
   NORMAL,
   HIT,
 } enemyState;
 
+class Player;
 class Map;
+class MapNode;
 
 class Enemy {
   public:
@@ -68,6 +71,6 @@ class Enemy {
   Uint8 blue;
 
   void idle();
-  void trackPlayer(Player* player, Map &gameMap);
+  void trackPlayer(Player* player, Map &gameMap, vector<MapNode*> nodes);
   void attack(Player* player);
 };
