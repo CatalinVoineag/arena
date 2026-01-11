@@ -8,4 +8,8 @@ MapNode::MapNode(SDL_FRect rect, SDL_FRect subRect) {
   this->obstacle = false;
   this->start = false;
   this->end = false;
+  // this->seen = false;
+  // this->globalGoal = INFINITY;
+  // this->localGoal = INFINITY;
+  // this->parent = nullptr;	// No parents
 } 

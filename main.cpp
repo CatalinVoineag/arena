@@ -79,7 +79,8 @@ SDL_Texture *enemyMoveTexture;
 SDL_Texture *enemyAttackTexture;
 SDL_Texture *tileMapTexture;
 SDL_Texture *monastaryTexture;
-
+uint64_t lastTicks;
+float MAX_DT = 0.002f;
 
 float distanceToRect(SDL_FRect start, SDL_FRect end) {
   float x = start.x - end.x;
@@ -96,7 +97,7 @@ void solveAStar(Map &gameMap, Player &player, Enemy &enemy) {
       gameMap.mapNodes[key].localGoal = INFINITY;
       gameMap.mapNodes[key].parent = nullptr;	// No parents
     }
-}
+  }
 
   MapNode* start = &gameMap.mapNodes[enemy.mapNodeIndex];
   MapNode* end = &gameMap.mapNodes[player.mapNodeIndex]; 
@@ -184,6 +185,7 @@ int main() {
     SDL_Event event;
     uint64_t PerfCountFrequency = SDL_GetPerformanceFrequency();
     uint64_t LastCounter = SDL_GetPerformanceCounter();
+    lastTicks = SDL_GetTicks(); 
 
     if (state.gameOver) {
     } else {
@@ -195,7 +197,6 @@ int main() {
           state.running = false;
           break;
         case SDL_EVENT_MOUSE_MOTION: {
-          // printf("MOUSE X %f Y %f\n", event.motion.x, event.motion.y);
           break;
         }
         case SDL_EVENT_MOUSE_BUTTON_DOWN: {

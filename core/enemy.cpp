@@ -30,7 +30,7 @@ Enemy::Enemy(
   defendSprites = 6;
   moveAnimationCounter = 0;
   moveSprites = 6;
-  speed = 1;
+  speed = 500;
   sdl_flip = SDL_FLIP_NONE;
   hitboxOffsetW = 55;
   hitboxOffsetH = 50;
@@ -113,7 +113,7 @@ void Enemy::idle() {
 }
 
 void Enemy::trackPlayer(Player *player, Map &gameMap) {
-  Uint32 now = SDL_GetTicks();
+  uint64_t now = SDL_GetTicks();
 
   if (now - enemyLastFrameTime >= frameDuration) {
     enemyLastFrameTime = now;
@@ -168,22 +168,28 @@ void Enemy::trackPlayer(Player *player, Map &gameMap) {
     end = end->parent;
   } 
 
+  float deltaTime = (now - lastTicks) / 1000.0f;
+
+  if (deltaTime > MAX_DT) {
+    deltaTime = MAX_DT;
+  }
+
   if (!nodes.empty()) {
     int nodeX = nodes.back()->rect.x;
     int nodeY = nodes.back()->rect.y;
     if (nodeX + 5 < entityBox.x) {
-      if (!leftColision) { rect.x -= speed; }
+      if (!leftColision) { rect.x -= speed * deltaTime; }
       sdl_flip = SDL_FLIP_HORIZONTAL;
     }
     if (nodeX + 5 > entityBox.x) {
-      if (!rightColision) { rect.x += speed; }
+      if (!rightColision) { rect.x += speed * deltaTime; }
       sdl_flip = SDL_FLIP_NONE;
     }
     if (nodeY < entityBox.y) {
-      if (!upColision) { rect.y -= speed; }
+      if (!upColision) { rect.y -= speed * deltaTime; }
     }
     if (nodeY > entityBox.y) {
-      if (!downColision) { rect.y += speed; }
+      if (!downColision) { rect.y += speed * deltaTime; }
     }
   }
 

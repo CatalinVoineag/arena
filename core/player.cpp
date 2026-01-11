@@ -1,8 +1,10 @@
 #include "player.h"
 #include "../globals.h"
 #include "enemy.h"
+#include <SDL3/SDL_oldnames.h>
 #include <SDL3/SDL_rect.h>
 #include <SDL3/SDL_render.h>
+#include <SDL3/SDL_timer.h>
 #include <cstdio>
 
 #define global static
@@ -26,7 +28,7 @@ Player::Player() {
   defendSprites = 6;
   moveAnimationCounter = 0;
   moveSprites = 6;
-  speed = 3;
+  speed = 800;
   sdl_flip = SDL_FLIP_NONE;
   midAnimation = false;
   lastFrameTime = 0;
@@ -38,7 +40,7 @@ Player::Player() {
 }
 
   void Player::idle() {
-    Uint32 now = SDL_GetTicks();
+    uint64_t now = SDL_GetTicks();
 
     if (now - lastFrameTime >= frameDuration) {
       lastFrameTime = now;
@@ -60,7 +62,7 @@ Player::Player() {
   }
 
   void Player::move() {
-    Uint32 now = SDL_GetTicks();
+    uint64_t now = SDL_GetTicks();
     bool rightColision = false;
     bool leftColision = false;
     bool upColision = false;
@@ -98,17 +100,24 @@ Player::Player() {
         }
       }
     }
+    float deltaTime = (now - lastTicks) / 1000.0f; 
+
+    if (deltaTime > MAX_DT) {
+      deltaTime = MAX_DT;
+    }
 
     if (pressed(SDLK_A)) {
-      if (!leftColision) { rect.x -= speed; }
+      if (!leftColision) {
+        rect.x -= speed * deltaTime;
+      }
       sdl_flip = SDL_FLIP_HORIZONTAL;
     }
     if (pressed(SDLK_D)) {
-      if (!rightColision) { rect.x += speed; }
+      if (!rightColision) { rect.x += speed * deltaTime; }
       sdl_flip = SDL_FLIP_NONE;
     }
-    if (pressed(SDLK_W) && !upColision) { rect.y -= speed; }
-    if (pressed(SDLK_S) && !downColision) { rect.y += speed; }
+    if (pressed(SDLK_W) && !upColision) { rect.y -= speed * deltaTime; }
+    if (pressed(SDLK_S) && !downColision) { rect.y += speed * deltaTime; }
 
     if (now - lastFrameTime >= frameDuration) {
       lastFrameTime = now;
