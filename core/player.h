@@ -30,7 +30,7 @@ class Player {
     void update(vector<Enemy> &enemies, Map &gameMap);
 
   private:
-    Uint32 lastFrameTime = 0;
+    uint64_t lastFrameTime = 0;
     int hitboxOffsetW = 55;
     int hitboxOffsetH = 50;
   

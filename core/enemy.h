@@ -16,7 +16,8 @@
 using namespace std;
 
 typedef enum enemyState {
-  NORMAL,
+  TRACKING,
+  IDLE,
   HIT,
 } enemyState;
 

@@ -32,5 +32,5 @@ extern SDL_Renderer *renderer;
 extern SDL_Window *window;
 extern inputStruct *input;
 extern map<uintptr_t, SDL_FRect> obj_coordinates;
-extern uint64_t lastTicks;
+extern uint64_t lastCounter;
 extern float MAX_DT;

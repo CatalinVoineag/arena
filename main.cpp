@@ -80,7 +80,7 @@ SDL_Texture *enemyMoveTexture;
 SDL_Texture *enemyAttackTexture;
 SDL_Texture *tileMapTexture;
 SDL_Texture *monastaryTexture;
-uint64_t lastTicks;
+uint64_t lastCounter;
 float MAX_DT = 0.002f;
 
 int main() {
@@ -125,9 +125,8 @@ int main() {
 
   while (state.running) {
     SDL_Event event;
-    Uint32 PerfCountFrequency = SDL_GetPerformanceFrequency();
-    Uint32 LastCounter = SDL_GetPerformanceCounter();
-    lastTicks = SDL_GetTicks(); 
+    uint64_t PerfCountFrequency = SDL_GetPerformanceFrequency();
+    uint64_t lastCounter = SDL_GetPerformanceCounter();
 
     if (state.gameOver) {
     } else {
@@ -188,7 +187,7 @@ int main() {
     }
 
     uint64_t EndCounter = SDL_GetPerformanceCounter();
-    uint64_t CounterElapsed = EndCounter - LastCounter;
+    uint64_t CounterElapsed = EndCounter - lastCounter;
     double MSPerFrame(((1000.0f * (double)CounterElapsed) / (double)PerfCountFrequency));
     double FPS = (double)PerfCountFrequency / (double)CounterElapsed;
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);  /* white, full alpha */
@@ -201,7 +200,7 @@ int main() {
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
 
-    LastCounter = EndCounter;
+    lastCounter = EndCounter;
   }
 
   for (int i = 0; i < surfaces.size(); i++){

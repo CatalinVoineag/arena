@@ -33,10 +33,10 @@ Enemy::Enemy(
   defendSprites = 6;
   moveAnimationCounter = 0;
   moveSprites = 6;
-  speed = 500;
+  speed = 65;
   sdl_flip = SDL_FLIP_NONE;
   hitDuration = 1000;
-  state = NORMAL;
+  state = TRACKING;
   idleTexture = idle_texture;
   moveTexture = move_texture;
   attackTexture = attack_texture;
@@ -61,6 +61,12 @@ void Enemy::update(Player *player, Map &gameMap) {
   Pathing pathing = Pathing();
   vector<MapNode*> nodes = pathing.solveAStar(gameMap, mapNodeIndex, player->mapNodeIndex);
 
+  if (nodes.size() > 1) {
+    state = TRACKING;
+  } else {
+    state = IDLE;
+  }
+
   if (state == HIT) {
     // set the correct color to the correct texture based on state?
     SDL_SetTextureColorMod(idleTexture, 204, 51, 51);
@@ -68,13 +74,15 @@ void Enemy::update(Player *player, Map &gameMap) {
     SDL_SetTextureColorMod(attackTexture, 204, 51, 51);
   }
 
-  // if (SDL_HasRectIntersectionFloat(&hitbox, &player->hitbox)) {
-  //   attack(player);
-  // } else {
-    // trackPlayer(player, gameMap, nodes);
-  // }
-
-  idle();
+  if(state == IDLE) {
+    idle();
+  } else {
+    // if (SDL_HasRectIntersectionFloat(&hitbox, &player->hitbox)) {
+    //   attack(player);
+    // } else {
+    trackPlayer(player, gameMap, nodes);
+    // }
+  }
 
   if (state == HIT) {
     Uint32 now = SDL_GetTicks(); 
@@ -84,7 +92,7 @@ void Enemy::update(Player *player, Map &gameMap) {
     if (now - hitLastFrameTime >= hitDuration) {
       hitLastFrameTime = now;
       SDL_SetTextureColorMod(idleTexture, red, green, blue);
-      state = NORMAL;
+      state = TRACKING;
       hitLastFrameTime = 0;
     }
   }
@@ -135,6 +143,7 @@ void Enemy::idle() {
 
 void Enemy::trackPlayer(Player *player, Map &gameMap, vector<MapNode*> nodes) {
   Uint32 now = SDL_GetTicks();
+  uint64_t nowPerformance = SDL_GetPerformanceCounter();
 
   if (now - enemyLastFrameTime >= frameDuration) {
     enemyLastFrameTime = now;
@@ -181,23 +190,16 @@ void Enemy::trackPlayer(Player *player, Map &gameMap, vector<MapNode*> nodes) {
     }
   }
 
-  // vector<MapNode*> nodes;
-  // MapNode* end = &gameMap.mapNodes[player->mapNodeIndex];
-  //
-  // while (end->parent != nullptr) {
-  //   nodes.push_back(end);
-  //   end = end->parent;
-  // } 
-
-  float deltaTime = (now - lastTicks) / 1000.0f;
+  float deltaTime = (nowPerformance - lastCounter) / 1000.0f; 
 
   if (deltaTime > MAX_DT) {
     deltaTime = MAX_DT;
   }
 
-  if (!nodes.empty()) {
-    int nodeX = nodes.front()->rect.x;
-    int nodeY = nodes.front()->rect.y;
+  if (nodes.size() > 1) {
+    int index = nodes.size() - 2;
+    int nodeX = nodes[index]->rect.x;
+    int nodeY = nodes[index]->rect.y;
     if (nodeX + 5 < entityBox.x) {
       if (!leftColision) { rect.x -= speed * deltaTime; }
       sdl_flip = SDL_FLIP_HORIZONTAL;

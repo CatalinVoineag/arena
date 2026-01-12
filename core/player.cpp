@@ -27,7 +27,7 @@ Player::Player() {
   defendSprites = 6;
   moveAnimationCounter = 0;
   moveSprites = 6;
-  speed = 800;
+  speed = 100;
   sdl_flip = SDL_FLIP_NONE;
   midAnimation = false;
   lastFrameTime = 0;
@@ -61,7 +61,8 @@ Player::Player() {
   }
 
   void Player::move() {
-    uint64_t now = SDL_GetTicks();
+    Uint32 now = SDL_GetTicks();
+    uint64_t nowPerformance = SDL_GetPerformanceCounter();
     bool rightColision = false;
     bool leftColision = false;
     bool upColision = false;
@@ -99,7 +100,8 @@ Player::Player() {
         }
       }
     }
-    float deltaTime = (now - lastTicks) / 1000.0f; 
+
+    float deltaTime = (nowPerformance - lastCounter) / 1000.0f; 
 
     if (deltaTime > MAX_DT) {
       deltaTime = MAX_DT;
