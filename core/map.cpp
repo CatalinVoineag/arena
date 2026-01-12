@@ -46,6 +46,26 @@ Map::Map() {
     { 6, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 4 },
   };
 
+  mapOverlay2 = { 
+    { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+    { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+    { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+    { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9, 9, 9, 0, 0, 10, 10, 10, 10, 10, 0, 0, 0, 0, 0, 0, 0 },
+    { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9, 9, 9, 0, 0, 10, 10, 10, 10, 10, 0, 0, 0, 0, 0, 0, 0 },
+    { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9, 9, 9, 0, 0, 10, 10, 10, 10, 10, 0, 0, 0, 0, 0, 0, 0 },
+    { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9, 9, 9, 0, 0, 10, 10, 10, 10, 10, 0, 0, 0, 0, 0, 0, 0 },
+    { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9, 9, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+    { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+    { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+    { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+    { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+    { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+    { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+    { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+    { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+    { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+  };
+
   for (int x = 0; x < mapArray[0].size(); x++) {
     for (int y = 0; y < mapArray.size(); y++) {
       SDL_FRect rect;
@@ -104,12 +124,60 @@ Map::Map() {
       }  
     }
   }
+
+  for (int x = 0; x < mapOverlay2[0].size(); x++) {
+    for (int y = 0; y < mapOverlay2.size(); y++) {
+
+      if (mapOverlay2[y][x] == 9) {
+        int key = y * mapOverlay2[0].size() + x;
+
+        if (!mapNodes[key].obstacle) {
+          SDL_FRect rect {
+            .x = mapNodes[key].rect.x,
+              .y = mapNodes[key].rect.y,
+              .w = 192,
+              .h = 320,
+          };
+          overlayTextures.push_back({ .rect = rect, .texture = MONESTARY });
+
+          for (int i = 0; i < 5; i++) {
+            for (int j = 0; j < 3; j++) {
+              key = (y + i) * mapOverlay2[0].size() + x + j;
+              mapNodes[key].obstacle = true;
+            }
+          }
+        }
+      }
+
+      if (mapOverlay2[y][x] == 10) {
+        int key = y * mapOverlay2[0].size() + x;
+
+        if (!mapNodes[key].obstacle) {
+          SDL_FRect rect {
+            .x = mapNodes[key].rect.x,
+              .y = mapNodes[key].rect.y,
+              .w = 320,
+              .h = 256,
+          };
+          overlayTextures.push_back({ .rect = rect, .texture = CASTLE });
+
+          for (int i = 0; i < 4; i++) {
+            for (int j = 0; j < 5; j++) {
+              key = (y + i) * mapOverlay2[0].size() + x + j;
+              mapNodes[key].obstacle = true;
+            }
+          }
+        }
+      }
+    }
+  }
+
   SDL_GetTextureColorMod(idleTexture, &red, &green, &blue);
 }
 
 void Map::update(const Player &player) {
   for (const auto& [key, value] : mapNodes) {
-    if (value.clicked || player.mapNodeIndex == key) {
+    if (player.mapNodeIndex == key || value.obstacle) {
       SDL_SetTextureColorMod(tileMapTexture, 204, 51, 51);
     } else if (value.start) {
       SDL_SetTextureColorMod(tileMapTexture, 0, 255, 0);
@@ -129,14 +197,14 @@ void Map::update(const Player &player) {
     SDL_RenderRect(renderer, &value.rect);
   }
 
-  SDL_FRect rect;
-  rect.x = 800;
-  rect.y = 100;
-  rect.w = 192;
-  rect.h = 320;
-
-  uintptr_t id = reinterpret_cast<uintptr_t>(&rect);
-  obj_coordinates[id] = { rect };
-
-  SDL_RenderTexture(renderer, monastaryTexture, NULL, &rect);
+  for (auto overlay :overlayTextures) {
+    switch (overlay.texture) {
+      case MONESTARY:
+        SDL_RenderTexture(renderer, monastaryTexture, NULL, &overlay.rect);
+        break;
+      case CASTLE:
+        SDL_RenderTexture(renderer, castleTexture, NULL, &overlay.rect);
+        break;
+    }
+  }
 }

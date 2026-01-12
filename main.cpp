@@ -11,7 +11,6 @@
 #include <cstdio>
 #include <cstdlib>
 #include <ctime>
-#include <iterator>
 #include <string.h>
 #include <vector>
 #include <map>
@@ -80,6 +79,7 @@ SDL_Texture *enemyMoveTexture;
 SDL_Texture *enemyAttackTexture;
 SDL_Texture *tileMapTexture;
 SDL_Texture *monastaryTexture;
+SDL_Texture *castleTexture;
 uint64_t lastCounter;
 float MAX_DT = 0.002f;
 
@@ -102,6 +102,7 @@ int main() {
   enemyAttackTexture = loadTexture("Units/Red/Warrior/Warrior_Attack1.png");
   tileMapTexture = loadTexture("Terrain/Tileset/Tilemap_color2.png");
   monastaryTexture = loadTexture("Buildings/Blue Buildings/Monastery.png");
+  castleTexture = loadTexture("Buildings/Blue Buildings/Castle.png");
   Map gameMap = Map();
   Player player = Player();
 

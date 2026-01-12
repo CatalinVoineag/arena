@@ -62,7 +62,8 @@ void Enemy::update(Player *player, Map &gameMap) {
   vector<MapNode*> nodes = pathing.solveAStar(gameMap, mapNodeIndex, player->mapNodeIndex);
 
   if (nodes.size() > 1) {
-    state = TRACKING;
+    // state = TRACKING;
+    state = IDLE;
   } else {
     state = IDLE;
   }

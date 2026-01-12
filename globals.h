@@ -27,6 +27,7 @@ extern SDL_Texture *attackTexture;
 extern SDL_Texture *defendTexture;
 extern SDL_Texture *tileMapTexture;
 extern SDL_Texture *monastaryTexture;
+extern SDL_Texture *castleTexture;
 
 extern SDL_Renderer *renderer;
 extern SDL_Window *window;
