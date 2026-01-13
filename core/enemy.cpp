@@ -44,8 +44,6 @@ Enemy::Enemy(
   hitLastFrameTime = 0;
   SDL_GetTextureColorMod(idleTexture, &red, &green, &blue);
   id = reinterpret_cast<uintptr_t>(this);
-
-  obj_coordinates[id] = { entityBox };
 }
 
 Enemy::~Enemy() {
@@ -57,6 +55,7 @@ void Enemy::update(Player *player, Map &gameMap) {
   int xIndex = (entityBox.x + entityBox.w / 2) / 64;
   int yIndex = (entityBox.y + entityBox.h / 2) / 64;
   mapNodeIndex = yIndex * gameMap.mapArray[0].size() + xIndex; 
+  gameMap.mapNodes[mapNodeIndex].obstacle = true;
 
   Pathing pathing = Pathing();
   vector<MapNode*> nodes = pathing.solveAStar(gameMap, mapNodeIndex, player->mapNodeIndex);
@@ -134,7 +133,6 @@ void Enemy::idle() {
   subRect.h = 192;
   entityBox.x = rect.x + hitboxOffsetW;
   entityBox.y = rect.y + hitboxOffsetH;
-  obj_coordinates[id] = { entityBox };
 
   // figure out how to maintain this for repeated attacks
   // how will this work with multiple actions, move/ attack/ block. etc.
@@ -157,39 +155,6 @@ void Enemy::trackPlayer(Player *player, Map &gameMap, vector<MapNode*> nodes) {
   bool leftColision = false;
   bool upColision = false;
   bool downColision = false;
-
-  for (auto objRect : obj_coordinates) {
-    if(objRect.first == id) { continue; }
-    bool colision = SDL_HasRectIntersectionFloat(&entityBox, &objRect.second); 
-    if (colision) {
-      float entityBoxLeft = entityBox.x;
-      float entityBoxRight = entityBox.x + entityBox.w;
-      float entityBoxTop = entityBox.y;
-      float entityBoxBottom = entityBox.y + entityBox.h;
-
-      float objLeft = objRect.second.x;
-      float objRight = objRect.second.x + objRect.second.w;
-      float objTop = objRect.second.y;
-      float objBottom = objRect.second.y + objRect.second.h;
-
-      float overlapX = min(entityBoxRight, objRight) - max(entityBoxLeft, objLeft);
-      float overlapY = min(entityBoxBottom, objBottom) - max(entityBoxTop, objTop);
-
-      if (overlapX < overlapY) {
-        if (entityBox.x < objRect.second.x) {
-          rightColision = true;
-        } else {
-          leftColision = true;
-        }
-      } else {
-        if (entityBox.y < objRect.second.y) {
-          downColision = true;
-        } else {
-          upColision = true;
-        }
-      }
-    }
-  }
 
   float deltaTime = (nowPerformance - lastCounter) / 1000.0f; 
 
@@ -223,7 +188,6 @@ void Enemy::trackPlayer(Player *player, Map &gameMap, vector<MapNode*> nodes) {
   subRect.h = 192;
   entityBox.x = rect.x + hitboxOffsetW;
   entityBox.y = rect.y + hitboxOffsetH;
-  obj_coordinates[id] = { entityBox };
 
   // figure out how to maintain this for repeated attacks
   // how will this work with multiple actions, move/ attack/ block. etc.

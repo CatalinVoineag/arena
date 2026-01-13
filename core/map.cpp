@@ -10,7 +10,6 @@ auto* debug_get_node(std::map<int, MapNode>& m, int key) {
     return it == m.end() ? nullptr : &it->second;
 }
 
-
 #define global static
 
 global map<int, pair<int, int>> mapCoordinates {

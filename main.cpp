@@ -183,10 +183,6 @@ int main() {
       SDL_RenderRect(renderer, &enemy.rect);
     }
 
-    for(auto obj : obj_coordinates) {
-      SDL_RenderRect(renderer, &obj.second);
-    }
-
     uint64_t EndCounter = SDL_GetPerformanceCounter();
     uint64_t CounterElapsed = EndCounter - lastCounter;
     double MSPerFrame(((1000.0f * (double)CounterElapsed) / (double)PerfCountFrequency));

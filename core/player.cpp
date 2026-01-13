@@ -7,7 +7,6 @@
 #include <cstdio>
 
 #define global static
-map<uintptr_t, SDL_FRect> obj_coordinates;
 
 Player::Player() {
   rect = { .x = 0, .y = 0, .w = 192, .h = 192 };
@@ -34,184 +33,178 @@ Player::Player() {
   hitboxOffsetW = 55;
   hitboxOffsetH = 50;
   id = reinterpret_cast<uintptr_t>(this);
-
-  obj_coordinates[id] = { entityBox };
 }
 
-  void Player::idle() {
-    uint64_t now = SDL_GetTicks();
+void Player::idle() {
+  uint64_t now = SDL_GetTicks();
 
-    if (now - lastFrameTime >= frameDuration) {
-      lastFrameTime = now;
-      idleAnimationCounter = (idleAnimationCounter + 1) % idleSprites;
-    }
-
-    subRect.x = 192 * idleAnimationCounter;
-    subRect.y = 0;
-    subRect.w = 192;
-    subRect.h = 192;
-    entityBox.x = rect.x + hitboxOffsetW;
-    entityBox.y = rect.y + hitboxOffsetH;
-    obj_coordinates[id] = { entityBox };
-
-    SDL_RenderTextureRotated(renderer, idleTexture, &subRect, &rect, 0.0, NULL, sdl_flip);
-  }
-  bool pressed(int keycode) {
-    return input->keycodes[keycode] == true;
+  if (now - lastFrameTime >= frameDuration) {
+    lastFrameTime = now;
+    idleAnimationCounter = (idleAnimationCounter + 1) % idleSprites;
   }
 
-  void Player::move() {
-    Uint32 now = SDL_GetTicks();
-    uint64_t nowPerformance = SDL_GetPerformanceCounter();
-    bool rightColision = false;
-    bool leftColision = false;
-    bool upColision = false;
-    bool downColision = false;
+  subRect.x = 192 * idleAnimationCounter;
+  subRect.y = 0;
+  subRect.w = 192;
+  subRect.h = 192;
+  entityBox.x = rect.x + hitboxOffsetW;
+  entityBox.y = rect.y + hitboxOffsetH;
 
-    for (auto objRect : obj_coordinates) {
-      if(objRect.first == id) { continue; }
-      bool colision = SDL_HasRectIntersectionFloat(&entityBox, &objRect.second); 
-      if (colision) {
-        float entityBoxLeft = entityBox.x;
-        float entityBoxRight = entityBox.x + entityBox.w;
-        float entityBoxTop = entityBox.y;
-        float entityBoxBottom = entityBox.y + entityBox.h;
+  SDL_RenderTextureRotated(renderer, idleTexture, &subRect, &rect, 0.0, NULL, sdl_flip);
+}
+bool pressed(int keycode) {
+  return input->keycodes[keycode] == true;
+}
 
-        float objLeft = objRect.second.x;
-        float objRight = objRect.second.x + objRect.second.w;
-        float objTop = objRect.second.y;
-        float objBottom = objRect.second.y + objRect.second.h;
+void Player::move(Map &gameMap) {
+  Uint32 now = SDL_GetTicks();
+  uint64_t nowPerformance = SDL_GetPerformanceCounter();
+  bool rightColision = false;
+  bool leftColision = false;
+  bool upColision = false;
+  bool downColision = false;
 
-        float overlapX = min(entityBoxRight, objRight) - max(entityBoxLeft, objLeft);
-        float overlapY = min(entityBoxBottom, objBottom) - max(entityBoxTop, objTop);
+  float deltaTime = (nowPerformance - lastCounter) / 1000.0f; 
 
-        if (overlapX < overlapY) {
-          if (entityBox.x < objRect.second.x) {
-            rightColision = true;
-          } else {
-            leftColision = true;
-          }
-        } else {
-          if (entityBox.y < objRect.second.y) {
-            downColision = true;
-          } else {
-            upColision = true;
-          }
-        }
-      }
-    }
-
-    float deltaTime = (nowPerformance - lastCounter) / 1000.0f; 
-
-    if (deltaTime > MAX_DT) {
-      deltaTime = MAX_DT;
-    }
-
-    if (pressed(SDLK_A)) {
-      if (!leftColision) { rect.x -= speed * deltaTime; }
-      sdl_flip = SDL_FLIP_HORIZONTAL;
-    }
-    if (pressed(SDLK_D)) {
-      if (!rightColision) { rect.x += speed * deltaTime; }
-      sdl_flip = SDL_FLIP_NONE;
-    }
-    if (pressed(SDLK_W) && !upColision) { rect.y -= speed * deltaTime; }
-    if (pressed(SDLK_S) && !downColision) { rect.y += speed * deltaTime; }
-
-    if (now - lastFrameTime >= frameDuration) {
-      lastFrameTime = now;
-      moveAnimationCounter = (moveAnimationCounter + 1) % moveSprites;
-    }
-
-    subRect.x = 192 * moveAnimationCounter;
-    subRect.y = 0;
-    subRect.w = 192;
-    subRect.h = 192;
-    entityBox.x = rect.x + hitboxOffsetW;
-    entityBox.y = rect.y + hitboxOffsetH;
-    obj_coordinates[id] = { entityBox };
-
-    SDL_RenderTextureRotated(renderer, moveTexture, &subRect, &rect, 0.0, NULL, sdl_flip);
+  if (deltaTime > MAX_DT) {
+    deltaTime = MAX_DT;
   }
 
-  void Player::defend() {
-    Uint32 now = SDL_GetTicks(); 
-    if (now - lastFrameTime >= frameDuration) {
-      lastFrameTime = now;
-      defendAnimationCounter = (defendAnimationCounter + 1) % defendSprites;
-    }
-
-    subRect.x = 192 * defendAnimationCounter;
-    subRect.y = 0;
-    subRect.w = 192;
-    subRect.h = 192;
-    entityBox.x = rect.x + hitboxOffsetW;
-    entityBox.y = rect.y + hitboxOffsetH;
-    obj_coordinates[id] = { entityBox };
-
-    SDL_RenderTextureRotated(renderer, defendTexture, &subRect, &rect, 0.0, NULL, sdl_flip);
-  }
-
-  void Player::attack(vector<Enemy> &enemies) {
-    for (int i = 0; i < enemies.size(); i++) {
-      bool contact = SDL_HasRectIntersectionFloat(&entityBox, &enemies[i].entityBox);
-      if (contact && !midAnimation) { 
-        enemies[i].hit(damage);
-      }
-    }
-
-    Uint32 now = SDL_GetTicks(); 
-    midAnimation = true;
-    if (now - lastFrameTime >= frameDuration) {
-      lastFrameTime = now;
-      attackAnimationCounter = (attackAnimationCounter + 1) % attackSprites;
-    }
-
-    subRect.x = 192 * attackAnimationCounter;
-    subRect.y = 0;
-    subRect.w = 192;
-    subRect.h = 192;
-    entityBox.x = rect.x + hitboxOffsetW;
-    entityBox.y = rect.y + hitboxOffsetH;
-    obj_coordinates[id] = { entityBox };
-
-    SDL_RenderTextureRotated(renderer, attackTexture, &subRect, &rect, 0.0, NULL, sdl_flip);
-
-    if (attackAnimationCounter == attackSprites - 1) {
-      attackAnimationCounter = 0;
-      midAnimation = false;
-    }
-  }
-
-  bool moving() {
-    return input->keycodes[SDLK_A] ||
-      input->keycodes[SDLK_D] ||
-      input->keycodes[SDLK_W] ||
-      input->keycodes[SDLK_S];
-  };
-
-  bool Player::attacking() {
-    // return input->mousecodes[SDL_BUTTON_LEFT] || midAnimation;
-    return false;
-  }
-
-  bool defending() {
-    return input->mousecodes[SDL_BUTTON_RIGHT].down;
-  }
-
-  void Player::update(vector<Enemy> &enemies, Map &gameMap) {
-    if (attacking()) {
-      attack(enemies);
-    }
-    else if (defending()) {
-      defend();
-    } else if (moving()) {
-      move();
-    } else {
-      idle();
-    }
-
-    int xIndex = (entityBox.x + entityBox.w / 2) / 64;
+  if (pressed(SDLK_A)) {
+    float moveDistance = speed * deltaTime;
+    int xIndex = (entityBox.x - moveDistance + entityBox.w / 2) / 64;
     int yIndex = (entityBox.y + entityBox.h / 2) / 64;
-    mapNodeIndex = yIndex * gameMap.mapArray[0].size() + xIndex; 
+    int key = yIndex * gameMap.mapArray[0].size() + xIndex; 
+
+    if (!gameMap.mapNodes[key].obstacle || key == mapNodeIndex) {
+      rect.x -= moveDistance;
+    }
+    sdl_flip = SDL_FLIP_HORIZONTAL;
   }
+  if (pressed(SDLK_D)) {
+    float moveDistance = speed * deltaTime;
+    int xIndex = (entityBox.x + moveDistance + entityBox.w / 2) / 64;
+    int yIndex = (entityBox.y + entityBox.h / 2) / 64;
+    int key = yIndex * gameMap.mapArray[0].size() + xIndex; 
+
+    if (!gameMap.mapNodes[key].obstacle || key == mapNodeIndex) {
+      rect.x += moveDistance;
+    }
+    sdl_flip = SDL_FLIP_NONE;
+  }
+  if (pressed(SDLK_W)) {
+    float moveDistance = speed * deltaTime;
+    int xIndex = (entityBox.x + entityBox.w / 2) / 64;
+    int yIndex = (entityBox.y - moveDistance + entityBox.h / 2) / 64;
+    int key = yIndex * gameMap.mapArray[0].size() + xIndex; 
+
+    if (!gameMap.mapNodes[key].obstacle || key == mapNodeIndex) {
+      rect.y -= moveDistance;
+    }
+  }
+
+  if (pressed(SDLK_S)) {
+    float moveDistance = speed * deltaTime;
+    int xIndex = (entityBox.x + entityBox.w / 2) / 64;
+    int yIndex = (entityBox.y + moveDistance + entityBox.h / 2) / 64;
+    int key = yIndex * gameMap.mapArray[0].size() + xIndex; 
+
+    if (!gameMap.mapNodes[key].obstacle || key == mapNodeIndex) {
+      rect.y += moveDistance;
+    }
+  }
+
+  if (now - lastFrameTime >= frameDuration) {
+    lastFrameTime = now;
+    moveAnimationCounter = (moveAnimationCounter + 1) % moveSprites;
+  }
+
+  subRect.x = 192 * moveAnimationCounter;
+  subRect.y = 0;
+  subRect.w = 192;
+  subRect.h = 192;
+  entityBox.x = rect.x + hitboxOffsetW;
+  entityBox.y = rect.y + hitboxOffsetH;
+
+  SDL_RenderTextureRotated(renderer, moveTexture, &subRect, &rect, 0.0, NULL, sdl_flip);
+}
+
+void Player::defend() {
+  Uint32 now = SDL_GetTicks(); 
+  if (now - lastFrameTime >= frameDuration) {
+    lastFrameTime = now;
+    defendAnimationCounter = (defendAnimationCounter + 1) % defendSprites;
+  }
+
+  subRect.x = 192 * defendAnimationCounter;
+  subRect.y = 0;
+  subRect.w = 192;
+  subRect.h = 192;
+  entityBox.x = rect.x + hitboxOffsetW;
+  entityBox.y = rect.y + hitboxOffsetH;
+
+  SDL_RenderTextureRotated(renderer, defendTexture, &subRect, &rect, 0.0, NULL, sdl_flip);
+}
+
+void Player::attack(vector<Enemy> &enemies) {
+  for (int i = 0; i < enemies.size(); i++) {
+    bool contact = SDL_HasRectIntersectionFloat(&entityBox, &enemies[i].entityBox);
+    if (contact && !midAnimation) { 
+      enemies[i].hit(damage);
+    }
+  }
+
+  Uint32 now = SDL_GetTicks(); 
+  midAnimation = true;
+  if (now - lastFrameTime >= frameDuration) {
+    lastFrameTime = now;
+    attackAnimationCounter = (attackAnimationCounter + 1) % attackSprites;
+  }
+
+  subRect.x = 192 * attackAnimationCounter;
+  subRect.y = 0;
+  subRect.w = 192;
+  subRect.h = 192;
+  entityBox.x = rect.x + hitboxOffsetW;
+  entityBox.y = rect.y + hitboxOffsetH;
+
+  SDL_RenderTextureRotated(renderer, attackTexture, &subRect, &rect, 0.0, NULL, sdl_flip);
+
+  if (attackAnimationCounter == attackSprites - 1) {
+    attackAnimationCounter = 0;
+    midAnimation = false;
+  }
+}
+
+bool moving() {
+  return input->keycodes[SDLK_A] ||
+    input->keycodes[SDLK_D] ||
+    input->keycodes[SDLK_W] ||
+    input->keycodes[SDLK_S];
+};
+
+bool Player::attacking() {
+  // return input->mousecodes[SDL_BUTTON_LEFT] || midAnimation;
+  return false;
+}
+
+bool defending() {
+  return input->mousecodes[SDL_BUTTON_RIGHT].down;
+}
+
+void Player::update(vector<Enemy> &enemies, Map &gameMap) {
+  int xIndex = (entityBox.x + entityBox.w / 2) / 64;
+  int yIndex = (entityBox.y + entityBox.h / 2) / 64;
+  mapNodeIndex = yIndex * gameMap.mapArray[0].size() + xIndex; 
+
+  if (attacking()) {
+    attack(enemies);
+  }
+  else if (defending()) {
+    defend();
+  } else if (moving()) {
+    move(gameMap);
+  } else {
+    idle();
+  }
+}

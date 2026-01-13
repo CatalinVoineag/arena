@@ -1,6 +1,7 @@
 #include "map.h"
 #include "pathing.h"
 #include <cmath>
+#include <cstdio>
 #include <queue>
 
 struct NodeState {
@@ -25,8 +26,7 @@ float distanceToRect(SDL_FRect start, SDL_FRect end) {
   return sqrt(pow(x, 2) + pow(y, 2));
 };
 
-Pathing::Pathing() {
-}
+Pathing::Pathing() {}
 
 vector<MapNode*> Pathing::solveAStar(Map &gameMap, int startNodeIndex, int endNodeIndex) {
   int width = gameMap.mapArray[0].size();
