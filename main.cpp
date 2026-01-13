@@ -124,10 +124,27 @@ int main() {
   );
   enemies.push_back(second);
 
+  uint64_t lastCounter = SDL_GetPerformanceCounter();
+  uint64_t perfFreq = SDL_GetPerformanceFrequency();
+  uint64_t fpsLastCounter = lastCounter;
+  int frames = 0;
+  double fps = 0.0;
+
   while (state.running) {
     SDL_Event event;
     uint64_t PerfCountFrequency = SDL_GetPerformanceFrequency();
-    uint64_t lastCounter = SDL_GetPerformanceCounter();
+    uint64_t now = SDL_GetPerformanceCounter();
+    float deltaTime = float((now - lastCounter)) / (float)SDL_GetPerformanceFrequency(); 
+    lastCounter = now;
+
+    frames++;
+    double elapsed = (double)(now - fpsLastCounter) / (double)perfFreq;
+
+    if (elapsed >= 1.0) {
+      fps = frames / elapsed;
+      frames = 0;
+      fpsLastCounter = now;
+    }
 
     if (state.gameOver) {
     } else {
@@ -167,9 +184,9 @@ int main() {
     }
 
     gameMap.update(player);
-    player.update(enemies, gameMap);
+    player.update(enemies, gameMap, deltaTime);
     for (int i = 0; i < enemies.size(); i++) {
-      enemies[i].update(&player, gameMap);
+      enemies[i].update(&player, gameMap, deltaTime);
     }
 
     // clear mouse or keycodes
@@ -183,21 +200,15 @@ int main() {
       SDL_RenderRect(renderer, &enemy.rect);
     }
 
-    uint64_t EndCounter = SDL_GetPerformanceCounter();
-    uint64_t CounterElapsed = EndCounter - lastCounter;
-    double MSPerFrame(((1000.0f * (double)CounterElapsed) / (double)PerfCountFrequency));
-    double FPS = (double)PerfCountFrequency / (double)CounterElapsed;
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);  /* white, full alpha */
-    string fps = string("FPS ") + to_string(FPS);
     SDL_SetRenderScale(renderer, 2.0f, 2.0f);
-    SDL_RenderDebugText(renderer, 825, 25, fps.c_str());
+    string fpsText = "FPS: " + to_string((int)fps);
+    SDL_RenderDebugText(renderer, 20, 20, fpsText.c_str());
     SDL_SetRenderScale(renderer, 1.0f, 1.0f);
-
-    SDL_RenderPresent(renderer);
+  
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    SDL_RenderPresent(renderer);
     SDL_RenderClear(renderer);
 
-    lastCounter = EndCounter;
   }
 
   for (int i = 0; i < surfaces.size(); i++){

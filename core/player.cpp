@@ -26,7 +26,7 @@ Player::Player() {
   defendSprites = 6;
   moveAnimationCounter = 0;
   moveSprites = 6;
-  speed = 100;
+  speed = 500;
   sdl_flip = SDL_FLIP_NONE;
   midAnimation = false;
   lastFrameTime = 0;
@@ -56,15 +56,8 @@ bool pressed(int keycode) {
   return input->keycodes[keycode] == true;
 }
 
-void Player::move(Map &gameMap) {
+void Player::move(Map &gameMap, float deltaTime) {
   Uint32 now = SDL_GetTicks();
-  uint64_t nowPerformance = SDL_GetPerformanceCounter();
-  bool rightColision = false;
-  bool leftColision = false;
-  bool upColision = false;
-  bool downColision = false;
-
-  float deltaTime = (nowPerformance - lastCounter) / 1000.0f; 
 
   if (deltaTime > MAX_DT) {
     deltaTime = MAX_DT;
@@ -192,7 +185,7 @@ bool defending() {
   return input->mousecodes[SDL_BUTTON_RIGHT].down;
 }
 
-void Player::update(vector<Enemy> &enemies, Map &gameMap) {
+void Player::update(vector<Enemy> &enemies, Map &gameMap, float deltaTime) {
   int xIndex = (entityBox.x + entityBox.w / 2) / 64;
   int yIndex = (entityBox.y + entityBox.h / 2) / 64;
   mapNodeIndex = yIndex * gameMap.mapArray[0].size() + xIndex; 
@@ -203,7 +196,7 @@ void Player::update(vector<Enemy> &enemies, Map &gameMap) {
   else if (defending()) {
     defend();
   } else if (moving()) {
-    move(gameMap);
+    move(gameMap, deltaTime);
   } else {
     idle();
   }

@@ -2,6 +2,8 @@
 #include <vector>
 using namespace std;
 
+class Enemy;
+
 class MapNode {
   public:
   SDL_FRect rect;
@@ -10,12 +12,9 @@ class MapNode {
   bool obstacle;
   bool start;
   bool end;
-  bool seen;
   vector<MapNode*> neighbors;
-  MapNode *parent;
-  float localGoal;
-  float globalGoal;
   int key;
+  Enemy *objOnTop = nullptr;
 
   MapNode() // default constructor
     : rect{0, 0, 0, 0}, subRect{0, 0, 0, 0} {}

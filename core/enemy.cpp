@@ -33,7 +33,7 @@ Enemy::Enemy(
   defendSprites = 6;
   moveAnimationCounter = 0;
   moveSprites = 6;
-  speed = 65;
+  speed = 200;
   sdl_flip = SDL_FLIP_NONE;
   hitDuration = 1000;
   state = TRACKING;
@@ -43,7 +43,6 @@ Enemy::Enemy(
   enemyLastFrameTime = 0;
   hitLastFrameTime = 0;
   SDL_GetTextureColorMod(idleTexture, &red, &green, &blue);
-  id = reinterpret_cast<uintptr_t>(this);
 }
 
 Enemy::~Enemy() {
@@ -51,11 +50,26 @@ Enemy::~Enemy() {
   entityBox = { .x = 0, .y = 0, .w = 0, .h = 0 };  
 };
 
-void Enemy::update(Player *player, Map &gameMap) {
+void Enemy::update(Player *player, Map &gameMap, float deltaTime) {
   int xIndex = (entityBox.x + entityBox.w / 2) / 64;
   int yIndex = (entityBox.y + entityBox.h / 2) / 64;
+  int oldMapIndex = mapNodeIndex;
   mapNodeIndex = yIndex * gameMap.mapArray[0].size() + xIndex; 
-  gameMap.mapNodes[mapNodeIndex].obstacle = true;
+
+  // Collisions will need to be using boundary boxes. For buildings we can use the obstacle but for characters no.
+  // We can have characters bigger than a tile.
+
+  if (oldMapIndex != mapNodeIndex) {
+    gameMap.mapNodes[oldMapIndex].obstacle = false;
+    gameMap.mapNodes[oldMapIndex].objOnTop = nullptr;
+  }
+
+  if (gameMap.mapNodes[mapNodeIndex].obstacle == false) {
+    gameMap.mapNodes[mapNodeIndex].obstacle = true;
+  }
+  if(!gameMap.mapNodes[mapNodeIndex].objOnTop) {
+    gameMap.mapNodes[mapNodeIndex].objOnTop = this;
+  }
 
   Pathing pathing = Pathing();
   vector<MapNode*> nodes = pathing.solveAStar(gameMap, mapNodeIndex, player->mapNodeIndex);
@@ -80,7 +94,7 @@ void Enemy::update(Player *player, Map &gameMap) {
     // if (SDL_HasRectIntersectionFloat(&hitbox, &player->hitbox)) {
     //   attack(player);
     // } else {
-    trackPlayer(player, gameMap, nodes);
+    trackPlayer(player, gameMap, nodes, deltaTime);
     // }
   }
 
@@ -140,23 +154,13 @@ void Enemy::idle() {
   SDL_SetTextureColorMod(idleTexture, 255, 255, 255);
 }
 
-void Enemy::trackPlayer(Player *player, Map &gameMap, vector<MapNode*> nodes) {
+void Enemy::trackPlayer(Player *player, Map &gameMap, vector<MapNode*> nodes, float deltaTime) {
   Uint32 now = SDL_GetTicks();
-  uint64_t nowPerformance = SDL_GetPerformanceCounter();
 
   if (now - enemyLastFrameTime >= frameDuration) {
     enemyLastFrameTime = now;
     moveAnimationCounter = (moveAnimationCounter + 1) % moveSprites;
   }
-
-  // We can maybe make a function that sets all these to true or false
-  // much like SDL functions do
-  bool rightColision = false;
-  bool leftColision = false;
-  bool upColision = false;
-  bool downColision = false;
-
-  float deltaTime = (nowPerformance - lastCounter) / 1000.0f; 
 
   if (deltaTime > MAX_DT) {
     deltaTime = MAX_DT;
@@ -166,19 +170,48 @@ void Enemy::trackPlayer(Player *player, Map &gameMap, vector<MapNode*> nodes) {
     int index = nodes.size() - 2;
     int nodeX = nodes[index]->rect.x;
     int nodeY = nodes[index]->rect.y;
+
     if (nodeX + 5 < entityBox.x) {
-      if (!leftColision) { rect.x -= speed * deltaTime; }
-      sdl_flip = SDL_FLIP_HORIZONTAL;
+      float moveDistance = speed * deltaTime;
+      int xIndex = (entityBox.x - moveDistance + entityBox.w / 2) / 64;
+      int yIndex = (entityBox.y + entityBox.h / 2) / 64;
+      int key = yIndex * gameMap.mapArray[0].size() + xIndex; 
+
+      if (!gameMap.mapNodes[key].obstacle || gameMap.mapNodes[key].objOnTop == this) {
+        rect.x -= moveDistance;
+      }
+        sdl_flip = SDL_FLIP_HORIZONTAL;
     }
     if (nodeX + 5 > entityBox.x) {
-      if (!rightColision) { rect.x += speed * deltaTime; }
+      float moveDistance = speed * deltaTime;
+      int xIndex = (entityBox.x + moveDistance + entityBox.w / 2) / 64;
+      int yIndex = (entityBox.y + entityBox.h / 2) / 64;
+      int key = yIndex * gameMap.mapArray[0].size() + xIndex; 
+
+      if (!gameMap.mapNodes[key].obstacle || gameMap.mapNodes[key].objOnTop == this) {
+        rect.x += moveDistance;
+      }
       sdl_flip = SDL_FLIP_NONE;
     }
     if (nodeY < entityBox.y) {
-      if (!upColision) { rect.y -= speed * deltaTime; }
+      float moveDistance = speed * deltaTime;
+      int xIndex = (entityBox.x + entityBox.w / 2) / 64;
+      int yIndex = (entityBox.y - moveDistance + entityBox.h / 2) / 64;
+      int key = yIndex * gameMap.mapArray[0].size() + xIndex; 
+
+      if (!gameMap.mapNodes[key].obstacle || gameMap.mapNodes[key].objOnTop == this) {
+        rect.y -= moveDistance;
+      }
     }
     if (nodeY > entityBox.y) {
-      if (!downColision) { rect.y += speed * deltaTime; }
+      float moveDistance = speed * deltaTime;
+      int xIndex = (entityBox.x + entityBox.w / 2) / 64;
+      int yIndex = (entityBox.y + moveDistance + entityBox.h / 2) / 64;
+      int key = yIndex * gameMap.mapArray[0].size() + xIndex; 
+
+      if (!gameMap.mapNodes[key].obstacle || gameMap.mapNodes[key].objOnTop == this) {
+        rect.y += moveDistance;
+      }
     }
   }
 

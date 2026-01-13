@@ -27,7 +27,7 @@ class Player {
     bool midAnimation;
 
     Player();
-    void update(vector<Enemy> &enemies, Map &gameMap);
+    void update(vector<Enemy> &enemies, Map &gameMap, float deltaTime);
 
   private:
     uint64_t lastFrameTime = 0;
@@ -35,7 +35,7 @@ class Player {
     int hitboxOffsetH = 50;
   
     void idle();
-    void move(Map &gameMap);
+    void move(Map &gameMap, float deltaTime);
     void attack(vector<Enemy> &enemies);
     void hit(vector<Enemy> &enemies);
     bool attacking();

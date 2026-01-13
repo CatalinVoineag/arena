@@ -27,7 +27,6 @@ class MapNode;
 
 class Enemy {
   public:
-  uintptr_t id;
   SDL_FRect rect;
   SDL_FRect subRect;
   SDL_FRect entityBox;
@@ -57,7 +56,7 @@ class Enemy {
     float y
   );
   ~Enemy();
-  void update(Player* player, Map &gameMap);
+  void update(Player* player, Map &gameMap, float deltaTime);
   void hit(int);
   void unhit();
 
@@ -72,6 +71,6 @@ class Enemy {
   Uint8 blue;
 
   void idle();
-  void trackPlayer(Player* player, Map &gameMap, vector<MapNode*> nodes);
+  void trackPlayer(Player* player, Map &gameMap, vector<MapNode*> nodes, float deltaTime);
   void attack(Player* player);
 };
