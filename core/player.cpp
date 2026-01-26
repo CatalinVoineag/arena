@@ -56,7 +56,75 @@ bool pressed(int keycode) {
   return input->keycodes[keycode] == true;
 }
 
-void Player::move(Map &gameMap, float deltaTime) {
+typedef struct colisionStruct {
+  float overlapX;
+  float overlapY;
+  float distanceX;
+  float distanceY;
+} colisionStruct;
+
+colisionStruct colision(SDL_FRect &rect, SDL_FRect &obj) {
+  float centerPlayerX = rect.x + rect.w / 2;
+  float centerPlayerY = rect.y + rect.h / 2;
+
+  float centerEnemyX = obj.x + obj.w / 2;
+  float centerEnemyY = obj.y + obj.h / 2;
+
+  float distanceX = centerPlayerX - centerEnemyX;
+  float distanceY = centerPlayerY - centerEnemyY;
+
+  float combinedHalfWidth = rect.w / 2 + obj.w / 2;
+  float combinedHalfHeight = rect.h / 2 + obj.h / 2;
+
+  float overlapX = combinedHalfWidth - abs(distanceX);
+  float overlapY = combinedHalfHeight - abs(distanceY);
+
+  return { 
+    .overlapX = overlapX,
+    .overlapY = overlapY,
+    .distanceX = distanceX,
+    .distanceY = distanceY
+  };
+}
+
+typedef struct movementCollision {
+  bool canMove;
+  float pushBackX;
+  float pushBackY;
+} movementCollision;
+
+movementCollision checkMovementCollision(SDL_FRect testBox, vector<Enemy> &enemies) {
+  movementCollision result = { .canMove = true, .pushBackX = 0, .pushBackY = 0 };
+  
+  for (auto &enemy : enemies) {
+    colisionStruct colisionObj = colision(testBox, enemy.entityBox);
+    
+    if (colisionObj.overlapX > 0 && colisionObj.overlapY > 0) {
+      result.canMove = false;
+      
+      // Calculate pushback for each axis
+      if (abs(colisionObj.distanceX) > abs(colisionObj.distanceY)) {
+        // Horizontal collision is dominant
+        if (colisionObj.distanceX > 0) {
+          result.pushBackX = max(result.pushBackX, colisionObj.overlapX);
+        } else {
+          result.pushBackX = min(result.pushBackX, -colisionObj.overlapX);
+        }
+      } else {
+        // Vertical collision is dominant
+        if (colisionObj.distanceY > 0) {
+          result.pushBackY = max(result.pushBackY, colisionObj.overlapY);
+        } else {
+          result.pushBackY = min(result.pushBackY, -colisionObj.overlapY);
+        }
+      }
+    }
+  }
+  
+  return result;
+}
+
+void Player::move(Map &gameMap, float deltaTime, vector<Enemy> &enemies) {
   Uint32 now = SDL_GetTicks();
 
   if (deltaTime > MAX_DT) {
@@ -70,7 +138,21 @@ void Player::move(Map &gameMap, float deltaTime) {
     int key = yIndex * gameMap.mapArray[0].size() + xIndex; 
 
     if (!gameMap.mapNodes[key].obstacle || key == mapNodeIndex) {
-      rect.x -= moveDistance;
+      SDL_FRect testBox = {
+        .x = entityBox.x - moveDistance,
+        .y = entityBox.y,
+        .w = entityBox.w,
+        .h = entityBox.h
+      };
+      
+      movementCollision collision = checkMovementCollision(testBox, enemies);
+      
+      if (collision.canMove) {
+        rect.x -= moveDistance;
+      } else {
+        // Apply pushback to move player out of collision
+        rect.x += collision.pushBackX;
+      }
     }
     sdl_flip = SDL_FLIP_HORIZONTAL;
   }
@@ -81,7 +163,21 @@ void Player::move(Map &gameMap, float deltaTime) {
     int key = yIndex * gameMap.mapArray[0].size() + xIndex; 
 
     if (!gameMap.mapNodes[key].obstacle || key == mapNodeIndex) {
-      rect.x += moveDistance;
+      SDL_FRect testBox = {
+        .x = entityBox.x + moveDistance,
+        .y = entityBox.y,
+        .w = entityBox.w,
+        .h = entityBox.h
+      };
+      
+      movementCollision collision = checkMovementCollision(testBox, enemies);
+      
+      if (collision.canMove) {
+        rect.x += moveDistance;
+      } else {
+        // Apply pushback to move player out of collision
+        rect.x += collision.pushBackX;
+      }
     }
     sdl_flip = SDL_FLIP_NONE;
   }
@@ -92,7 +188,21 @@ void Player::move(Map &gameMap, float deltaTime) {
     int key = yIndex * gameMap.mapArray[0].size() + xIndex; 
 
     if (!gameMap.mapNodes[key].obstacle || key == mapNodeIndex) {
-      rect.y -= moveDistance;
+      SDL_FRect testBox = {
+        .x = entityBox.x,
+        .y = entityBox.y - moveDistance,
+        .w = entityBox.w,
+        .h = entityBox.h
+      };
+      
+      movementCollision collision = checkMovementCollision(testBox, enemies);
+      
+      if (collision.canMove) {
+        rect.y -= moveDistance;
+      } else {
+        // Apply pushback to move player out of collision
+        rect.y += collision.pushBackY;
+      }
     }
   }
 
@@ -103,7 +213,21 @@ void Player::move(Map &gameMap, float deltaTime) {
     int key = yIndex * gameMap.mapArray[0].size() + xIndex; 
 
     if (!gameMap.mapNodes[key].obstacle || key == mapNodeIndex) {
-      rect.y += moveDistance;
+      SDL_FRect testBox = {
+        .x = entityBox.x,
+        .y = entityBox.y + moveDistance,
+        .w = entityBox.w,
+        .h = entityBox.h
+      };
+      
+      movementCollision collision = checkMovementCollision(testBox, enemies);
+      
+      if (collision.canMove) {
+        rect.y += moveDistance;
+      } else {
+        // Apply pushback to move player out of collision
+        rect.y += collision.pushBackY;
+      }
     }
   }
 
@@ -196,7 +320,7 @@ void Player::update(vector<Enemy> &enemies, Map &gameMap, float deltaTime) {
   else if (defending()) {
     defend();
   } else if (moving()) {
-    move(gameMap, deltaTime);
+    move(gameMap, deltaTime, enemies);
   } else {
     idle();
   }

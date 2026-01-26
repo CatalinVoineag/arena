@@ -198,6 +198,7 @@ int main() {
 
     for(auto enemy : enemies) {
       SDL_RenderRect(renderer, &enemy.rect);
+      SDL_RenderRect(renderer, &enemy.entityBox);
     }
 
     SDL_SetRenderScale(renderer, 2.0f, 2.0f);

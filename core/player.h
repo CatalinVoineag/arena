@@ -35,7 +35,7 @@ class Player {
     int hitboxOffsetH = 50;
   
     void idle();
-    void move(Map &gameMap, float deltaTime);
+    void move(Map &gameMap, float deltaTime, vector<Enemy> &enemies);
     void attack(vector<Enemy> &enemies);
     void hit(vector<Enemy> &enemies);
     bool attacking();

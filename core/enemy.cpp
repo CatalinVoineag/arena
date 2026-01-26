@@ -53,23 +53,10 @@ Enemy::~Enemy() {
 void Enemy::update(Player *player, Map &gameMap, float deltaTime) {
   int xIndex = (entityBox.x + entityBox.w / 2) / 64;
   int yIndex = (entityBox.y + entityBox.h / 2) / 64;
-  int oldMapIndex = mapNodeIndex;
   mapNodeIndex = yIndex * gameMap.mapArray[0].size() + xIndex; 
 
   // Collisions will need to be using boundary boxes. For buildings we can use the obstacle but for characters no.
   // We can have characters bigger than a tile.
-
-  if (oldMapIndex != mapNodeIndex) {
-    gameMap.mapNodes[oldMapIndex].obstacle = false;
-    gameMap.mapNodes[oldMapIndex].objOnTop = nullptr;
-  }
-
-  if (gameMap.mapNodes[mapNodeIndex].obstacle == false) {
-    gameMap.mapNodes[mapNodeIndex].obstacle = true;
-  }
-  if(!gameMap.mapNodes[mapNodeIndex].objOnTop) {
-    gameMap.mapNodes[mapNodeIndex].objOnTop = this;
-  }
 
   Pathing pathing = Pathing();
   vector<MapNode*> nodes = pathing.solveAStar(gameMap, mapNodeIndex, player->mapNodeIndex);
